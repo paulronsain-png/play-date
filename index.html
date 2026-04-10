@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>ChessTime</title>
+  <link rel="icon" type="image/png" href="icon.png" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ChessTime" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=128" />
+</head>
+<body class="dark-mode">
+  <div id="loading-screen">
+    <img src="icon.png" class="loading-logo">
+    <p id="loading-text"></p>
+    <div class="loading-bar-track">
+      <div class="loading-bar-fill" id="loading-bar"></div>
+    </div>
+  </div>
+
+  <div id="auth-gate" class="auth-gate hidden" aria-live="polite">
+    <div class="auth-card">
+      <div class="auth-logo-wrap">
+        <img src="icon.png" alt="ChessTime logo" class="auth-logo">
+      </div>
+      <h1 class="auth-title">ChessTime</h1>
+      <p class="auth-subtitle">Private games for signed-in players</p>
+
+      <div id="auth-panel">
+        <div class="auth-tabs">
+          <button id="auth-tab-login" class="auth-tab active" type="button">Log In</button>
+          <button id="auth-tab-signup" class="auth-tab" type="button">Sign Up</button>
+        </div>
+
+        <form id="login-form" class="auth-form">
+          <label class="auth-label" for="login-email">Email</label>
+          <input id="login-email" class="auth-input" type="email" autocomplete="email" required />
+          <label class="auth-label" for="login-password">Password</label>
+          <input id="login-password" class="auth-input" type="password" autocomplete="current-password" required />
+          <button id="login-submit" class="auth-submit" type="submit">Log In</button>
+        </form>
+
+        <form id="signup-form" class="auth-form hidden">
+          <label class="auth-label" for="signup-name">Display Name</label>
+          <input id="signup-name" class="auth-input" type="text" maxlength="24" placeholder="Your name" required />
+          <label class="auth-label" for="signup-email">Email</label>
+          <input id="signup-email" class="auth-input" type="email" autocomplete="email" required />
+          <label class="auth-label" for="signup-password">Password</label>
+          <input id="signup-password" class="auth-input" type="password" autocomplete="new-password" minlength="6" required />
+          <label class="auth-label" for="signup-confirm">Confirm Password</label>
+          <input id="signup-confirm" class="auth-input" type="password" autocomplete="new-password" minlength="6" required />
+          <label class="auth-label" for="signup-avatar">Avatar (optional)</label>
+          <div class="avatar-input-row">
+            <img id="signup-avatar-preview" class="auth-avatar-preview" alt="Avatar preview">
+            <input id="signup-avatar" class="auth-file-input" type="file" accept="image/*" />
+          </div>
+          <label class="auth-label" for="signup-partner-email">Partner Email (optional)</label>
+          <input id="signup-partner-email" class="auth-input" type="email" autocomplete="email" placeholder="partner@email.com" />
+          <label class="auth-label" for="signup-reunion-at">Reunion Date & Time (optional)</label>
+          <input id="signup-reunion-at" class="auth-input" type="datetime-local" />
+          <button id="signup-submit" class="auth-submit" type="submit">Create Account</button>
+        </form>
+      </div>
+
+      <div id="profile-panel" class="hidden">
+        <p class="lobby-user">Set up your profile</p>
+        <form id="profile-form" class="auth-form">
+          <label class="auth-label" for="profile-name">Display Name</label>
+          <input id="profile-name" class="auth-input" type="text" maxlength="24" placeholder="Your name" required />
+          <label class="auth-label" for="profile-avatar">Avatar (optional)</label>
+          <div class="avatar-input-row">
+            <img id="profile-avatar-preview" class="auth-avatar-preview" alt="Avatar preview">
+            <input id="profile-avatar" class="auth-file-input" type="file" accept="image/*" />
+          </div>
+          <label class="auth-label" for="profile-partner-email">Partner Email (optional)</label>
+          <input id="profile-partner-email" class="auth-input" type="email" autocomplete="email" placeholder="partner@email.com" />
+          <label class="auth-label" for="profile-reunion-at">Reunion Date & Time (optional)</label>
+          <input id="profile-reunion-at" class="auth-input" type="datetime-local" />
+          <button id="profile-save-btn" class="auth-submit" type="submit">Save Profile</button>
+        </form>
+        <button id="profile-skip-btn" class="auth-ghost-btn" type="button">Use Default Avatar</button>
+      </div>
+
+      <div id="lobby-panel" class="hidden">
+        <p class="lobby-user" id="lobby-user"></p>
+        <div class="lobby-actions">
+          <button id="create-game-btn" class="auth-submit lobby-create" type="button">Create Game</button>
+          <div class="join-block">
+            <input id="join-link-input" class="auth-input" type="text" placeholder="Paste game link" />
+            <button id="join-game-btn" class="auth-submit" type="button">Join Game</button>
+          </div>
+        </div>
+        <button id="auth-logout-btn" class="auth-ghost-btn" type="button">Log Out</button>
+      </div>
+
+      <p id="auth-message" class="auth-message" role="status"></p>
+    </div>
+  </div>
+
+  <div class="bg-texture"></div>
+
+  <div class="top-bar">
+    <div class="nav-pills">
+      <button class="nav-btn active" id="btn-pvp">Paul vs Caro</button>
+      <button class="nav-btn" id="btn-ai">vs Computer</button>
+      <div class="theme-menu-wrap" id="theme-menu-wrap">
+        <button id="theme-toggle" class="nav-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Theme menu">🌙</button>
+        <div class="theme-menu" id="theme-menu" role="menu" aria-label="Theme selector">
+          <button class="theme-option" id="theme-dark" role="menuitem" aria-label="Dark mode" title="Dark mode">
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M20.3 14.2A8.6 8.6 0 0 1 9.8 3.7a.7.7 0 0 0-1-.8A9.9 9.9 0 1 0 21.1 15.2a.7.7 0 0 0-.8-1z"/>
+            </svg>
+          </button>
+          <button class="theme-option" id="theme-cream" role="menuitem" aria-label="Cream mode" title="Cream mode">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="12" cy="12" r="4.2" fill="currentColor"/>
+              <path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="theme-option" id="theme-green" role="menuitem" aria-label="Green mode" title="Green mode">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true">
+              <path d="M1 12C1 12 5 5 12 5C19 5 23 12 23 12C23 12 19 19 12 19C5 19 1 12 1 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              <circle cx="12" cy="12" r="3" fill="currentColor"/>
+            </svg>
+          </button>
+          <button class="theme-option" id="theme-og" role="menuitem" aria-label="OG mode" title="OG mode">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true">
+              <path d="M3.5 12A8.5 8.5 0 1 0 7 5.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M3.5 8v4.5H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="profile-menu-wrap hidden" id="profile-menu-wrap">
+        <button id="profile-btn" class="nav-btn profile-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Profile menu">
+          <img id="profile-btn-avatar" class="profile-btn-avatar" alt="Profile avatar" />
+        </button>
+        <div id="profile-menu" class="profile-menu hidden" role="menu" aria-label="Profile menu">
+          <div class="profile-menu-header">
+            <img id="profile-menu-avatar" class="profile-menu-avatar" alt="Profile avatar" />
+            <div class="profile-menu-meta">
+              <div id="profile-menu-name" class="profile-menu-name">Player</div>
+              <div id="profile-menu-email" class="profile-menu-email"></div>
+            </div>
+          </div>
+          <div class="profile-edit">
+            <label class="profile-edit-label" for="profile-menu-name-input">Player Name</label>
+            <input id="profile-menu-name-input" class="profile-edit-input" type="text" maxlength="24" placeholder="Your name" />
+          <label class="profile-edit-label" for="profile-menu-avatar-input">Avatar Photo</label>
+          <div class="profile-edit-avatar-row">
+            <img id="profile-menu-avatar-preview" class="profile-edit-avatar-preview" alt="Avatar preview" />
+            <input id="profile-menu-avatar-input" class="auth-file-input" type="file" accept="image/*" />
+          </div>
+          <label class="profile-edit-label" for="profile-menu-partner-email">Partner Email</label>
+          <input id="profile-menu-partner-email" class="profile-edit-input" type="email" autocomplete="email" placeholder="partner@email.com" />
+          <label class="profile-edit-label" for="profile-menu-reunion-at">Reunion Date & Time</label>
+          <input id="profile-menu-reunion-at" class="profile-edit-input" type="datetime-local" />
+          <button id="profile-save-btn-menu" class="ctrl-btn" type="button">Save Profile</button>
+        </div>
+          <div class="profile-menu-actions">
+            <button id="profile-change-password-btn" class="ctrl-btn" type="button">Change Password</button>
+            <button id="profile-logout-btn" class="ctrl-btn" type="button">Log Out</button>
+          </div>
+          <div class="profile-history">
+            <h3>Match History</h3>
+            <div id="profile-history-list" class="profile-history-list"></div>
+          </div>
+          <p id="profile-menu-status" class="profile-menu-status"></p>
+        </div>
+      </div>
+    </div>
+    <div class="countdown-banner hidden" id="reunion-banner">
+      <div class="countdown-text">
+        <span class="countdown-label" id="countdown-label">Days until reunion:</span>
+        <span id="countdown-timer"></span>
+      </div>
+      <div class="countdown-bar-track">
+        <div class="countdown-bar-fill" id="countdown-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <aside class="panel panel-left">
+
+      <div class="player-card" id="card-black">
+        <div class="avatar-wrapper">
+          <div class="player-avatar">
+            <img src="caro-dark.png" alt="Caro" class="avatar-img">
+            <video id="video-black" class="player-video" autoplay playsinline></video>
+            <button class="video-extend-btn" type="button" aria-label="Extend video">Extend</button>
+          </div>
+          <div class="chat-bubble hidden" id="chat-bubble-black"></div>
+        </div>
+        <div class="player-info">
+          <span class="player-name">Caro 🧡</span>
+          <span class="player-label">Player 2</span>
+        </div>
+        <div class="score-advantage hidden" id="adv-black"></div>
+        <div class="captured-pieces" id="captured-by-white"></div>
+        <div class="player-clock" id="clock-black">10:00</div>
+      </div>
+      <div class="love-heart">
+        <span class="heart" id="beating-heart">♥&#xFE0E;</span>
+      </div>
+
+      <div class="player-card" id="card-white">
+        <div class="avatar-wrapper">
+          <div class="player-avatar">
+            <img src="paul-dark.png" alt="Paul" class="avatar-img">
+            <video id="video-white" class="player-video" autoplay playsinline></video>
+            <button class="video-extend-btn" type="button" aria-label="Extend video">Extend</button>
+            <div class="speech-bubble hidden" id="paul-winning">sorry baby :(</div>
+            <div class="speech-bubble hidden" id="paul-losing">smartie 🙂</div>
+          </div>
+          <div class="chat-bubble hidden" id="chat-bubble-white"></div>
+        </div>
+        <div class="player-info">
+          <span class="player-name">Paul ❤️</span>
+          <span class="player-label">Player 1</span>
+        </div>
+        <div class="score-advantage hidden" id="adv-white"></div>
+        <div class="captured-pieces" id="captured-by-black"></div>
+        <div class="player-clock" id="clock-white">10:00</div>
+      </div>
+
+    </aside>
+
+    <section class="board-area">
+      <div class="board-wrapper">
+        <div class="coords-top">
+          <span>a</span><span>b</span><span>c</span><span>d</span>
+          <span>e</span><span>f</span><span>g</span><span>h</span>
+        </div>
+        <div class="board-row-wrapper">
+          <div class="coords-left" id="coords-left"></div>
+          <div class="board" id="board"></div>
+          <div class="coords-right" id="coords-right"></div>
+        </div>
+        <div class="coords-bottom">
+          <span>a</span><span>b</span><span>c</span><span>d</span>
+          <span>e</span><span>f</span><span>g</span><span>h</span>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel panel-right">
+      <div class="status-box">
+        <div class="turn-indicator" id="turn-indicator">
+          <span class="turn-dot white-dot"></span>
+          <span id="turn-text">Paul's Turn</span>
+        </div>
+        <div class="check-alert hidden" id="check-alert">⚠ CHECK!</div>
+      </div>
+
+      <button class="panel-toggle" id="panel-toggle" aria-label="Toggle menu">&#8963;</button>
+
+      <div class="panel-collapsible" id="panel-collapsible">
+        <div class="mobile-clocks" id="mobile-clocks">
+          <div class="mobile-clock-row">
+            <span class="mobile-clock-name">Paul</span>
+            <span class="mobile-clock-value" id="clock-white-menu">10:00</span>
+          </div>
+          <div class="mobile-clock-row">
+            <span class="mobile-clock-name">Caro</span>
+            <span class="mobile-clock-value" id="clock-black-menu">10:00</span>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button class="ctrl-btn primary" id="btn-new-game">New Game</button>
+          <button class="ctrl-btn" id="btn-undo">↩ Undo</button>
+          <button class="ctrl-btn" id="btn-flip">⇅ Flip Board</button>
+          <button class="ctrl-btn" id="btn-resign">⚑ Resign</button>
+        </div>
+
+        <div class="settings-box">
+          <h3>Settings</h3>
+          <label class="setting-row">
+            <span>Show legal moves</span>
+            <input type="checkbox" id="toggle-hints" checked />
+          </label>
+          <label class="setting-row">
+            <span>Sound effects</span>
+            <input type="checkbox" id="toggle-sound" checked />
+          </label>
+          <label class="setting-row">
+            <span>Timer (min)</span>
+            <select id="timer-select">
+              <option value="0">Off</option>
+              <option value="3">3 min</option>
+              <option value="5">5 min</option>
+              <option value="10">10 min</option>
+              <option value="15">15 min</option>
+              <option value="30">30 min</option>
+              <option value="60" selected>1 hour</option>
+            </select>
+          </label>
+        </div>
+        <div class="share-box hidden" id="share-box">
+          <h3>Invite Player ♟</h3>
+          <p class="share-hint">Waiting for second player...</p>
+          <div class="share-row">
+            <input type="text" id="share-link" readonly />
+            <button class="ctrl-btn" id="copy-link-btn">Copy</button>
+          </div>
+        </div>
+        <button id="yapping-btn" class="ctrl-btn hidden"><svg viewBox="0 0 24 26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" width="13" height="14" style="vertical-align:middle;margin-right:4px"><path d="M6 2 Q7 0 6 -1.5"/><path d="M10 2 Q11 0 10 -1.5"/><path d="M14 2 Q15 0 14 -1.5"/><path d="M5 5h12l-1.5 9a3 3 0 01-3 2.5h-3A3 3 0 016.5 14L5 5z" fill="currentColor" stroke="none" opacity="0.15"/><path d="M5 5h12l-1.5 9a3 3 0 01-3 2.5h-3A3 3 0 016.5 14L5 5z"/><path d="M17 7h2a2 2 0 010 4h-2"/><line x1="4" y1="19" x2="18" y2="19"/></svg>Yapping Break</button>
+        <div id="yapping-menu" class="yapping-menu hidden">
+          <button id="yapping-resume-btn" class="ctrl-btn yapping-menu-btn" type="button">Resume</button>
+          <button id="yapping-quick-btn" class="ctrl-btn yapping-menu-btn" type="button">Quick Convo</button>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <div id="love-overlay" class="love-overlay hidden">
+    <div class="love-text">I love you ♥</div>
+  </div>
+
+  <div id="yapping-toast" class="yapping-toast hidden">
+    <span class="yapping-toast-icon">☕</span>
+    <span class="yapping-toast-msg">Keep yapping, I'm listening ❤️</span>
+  </div>
+
+  <div id="quick-convo-overlay" class="quick-convo-overlay hidden" aria-hidden="true">
+    <div class="quick-convo-card">
+      <div class="quick-convo-feed top">
+        <video id="quick-convo-video-top" autoplay playsinline muted></video>
+        <img id="quick-convo-avatar-top" alt="Top player avatar" />
+        <div id="quick-convo-name-top" class="quick-convo-name">Player</div>
+      </div>
+      <div class="quick-convo-feed bottom">
+        <video id="quick-convo-video-bottom" autoplay playsinline muted></video>
+        <img id="quick-convo-avatar-bottom" alt="Bottom player avatar" />
+        <div id="quick-convo-name-bottom" class="quick-convo-name">Player</div>
+      </div>
+      <button id="quick-convo-end-btn" class="ctrl-btn quick-convo-end-btn" type="button">End Convo</button>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="overlay">
+    <div class="modal" id="modal">
+      <div class="modal-icon" id="modal-icon">♛</div>
+      <h2 id="modal-title">Game Over</h2>
+      <p id="modal-msg">Paul wins by checkmate!</p>
+      <div class="modal-buttons">
+        <button class="ctrl-btn primary" id="modal-new">Play Again</button>
+        <button class="ctrl-btn" id="modal-close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Camera toggle -->
+  <button id="camera-btn" class="chat-fab camera-fab" aria-label="Toggle camera">
+    <svg id="camera-icon" viewBox="0 0 28 22" fill="currentColor" xmlns="http://www.w3.org/2000/svg" width="22" height="18">
+      <rect x="0" y="3" width="17" height="16" rx="3"/>
+      <path d="M18 8.5l8-5.5v16l-8-5.5V8.5z"/>
+    </svg>
+  </button>
+
+  <!-- Chat -->
+  <button id="chat-btn" class="chat-fab" aria-label="Open chat">
+    <svg viewBox="0 0 28 26" fill="currentColor" xmlns="http://www.w3.org/2000/svg" width="22" height="20">
+      <path d="M14 1C6.82 1 1 6.15 1 12.5c0 2.95 1.3 5.63 3.43 7.63L3 25l5.76-2.3C10.43 23.53 12.17 24 14 24c7.18 0 13-5.15 13-11.5S21.18 1 14 1z"/>
+    </svg>
+    <span class="chat-badge hidden" id="chat-badge">0</span>
+  </button>
+  <div class="chat-panel hidden" id="chat-panel">
+    <div class="chat-header">
+      <span class="chat-title">Chat</span>
+      <button class="chat-close-btn" id="chat-close">✕</button>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="Say something..." maxlength="200" autocomplete="off" />
+      <button id="chat-send">➤</button>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="promo-overlay">
+    <div class="modal promo-modal">
+      <h2>Promote Pawn</h2>
+      <p>Choose a piece</p>
+      <div class="promo-choices" id="promo-choices"></div>
+    </div>
+  </div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBp8hIlxYuJJPELWGlK87cOApBNfHVuRO4",
+    authDomain: "chess-web-app-26069.firebaseapp.com",
+    databaseURL: "https://chess-web-app-26069-default-rtdb.firebaseio.com",
+    projectId: "chess-web-app-26069",
+    storageBucket: "chess-web-app-26069.firebasestorage.app",
+    messagingSenderId: "619379564323",
+    appId: "1:619379564323:web:f385235399e04ee04c7696"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  window.auth = firebase.auth();
+  window.db = firebase.database();
+  (function initGameIdFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const gid = params.get('game');
+    window.GAME_ID = gid ? gid.trim() : '';
+  })();
+</script>
+
+<script src="auth.js?v=11"></script>
+<script src="pieces.js?v=8"></script>
+<script src="chat.js?v=5"></script>
+<script src="webrtc.js?v=12"></script>
+<script src="fluid-bg.js?v=5"></script>
+<script src="board.js?v=7"></script>
+<script src="game.js?v=29"></script>
+<script src="main.js?v=29"></script>
+<script src="profile-menu.js?v=5"></script>
+<script>
+window.addEventListener("load", () => {
+  const text = document.getElementById("loading-text");
+  const screen = document.getElementById("loading-screen");
+  if (text) text.textContent = "ChessTime";
+
+  setTimeout(() => {
+    if (screen) {
+      screen.style.opacity = "0";
+      setTimeout(() => {
+        screen.style.display = "none";
+      }, 500);
+    }
+  }, 2000);
+});
+
+const reunionState = { targetAt: null };
+
+function normalizeEmail(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function safeTimestamp(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function isSeatLiveForReunion(seat) {
+  if (!seat || !seat.connectedAt) return false;
+  return (Date.now() - Number(seat.connectedAt)) < 30000;
+}
+
+function pickReunionFromSeats(seats) {
+  const w = seats?.w;
+  const b = seats?.b;
+  if (!isSeatLiveForReunion(w) || !isSeatLiveForReunion(b)) return null;
+
+  const wEmail = normalizeEmail(w.email);
+  const bEmail = normalizeEmail(b.email);
+  if (!wEmail || !bEmail) return null;
+
+  const candidates = [];
+  if (normalizeEmail(w.reunionPartnerEmail) === bEmail) {
+    const ts = safeTimestamp(w.reunionAt);
+    if (ts) candidates.push(ts);
+  }
+  if (normalizeEmail(b.reunionPartnerEmail) === wEmail) {
+    const ts = safeTimestamp(b.reunionAt);
+    if (ts) candidates.push(ts);
+  }
+
+  if (!candidates.length) return null;
+  const future = candidates.filter(ts => ts > Date.now()).sort((a, b) => a - b);
+  if (future.length) return future[0];
+  return candidates.sort((a, b) => b - a)[0];
+}
+
+function hideReunionCountdown() {
+  reunionState.targetAt = null;
+  const banner = document.getElementById('reunion-banner');
+  if (banner) banner.classList.add('hidden');
+}
+
+function renderReunionCountdown() {
+  const banner = document.getElementById('reunion-banner');
+  const label = document.getElementById('countdown-label');
+  const el = document.getElementById('countdown-timer');
+  const bar = document.getElementById('countdown-bar');
+  const text = document.querySelector('.countdown-text');
+  const track = document.querySelector('.countdown-bar-track');
+  if (!banner || !el) return;
+
+  const targetAt = reunionState.targetAt;
+  if (!targetAt) {
+    banner.classList.add('hidden');
+    return;
+  }
+
+  banner.classList.remove('hidden');
+  if (label) label.textContent = 'Days until reunion:';
+
+  const now = Date.now();
+  const diff = targetAt - now;
+
+  if (diff <= 0) {
+    el.textContent = 'Reunion day! ♥';
+    if (bar) bar.style.width = '100%';
+    return;
+  }
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  el.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+
+  if (track && text) track.style.width = text.offsetWidth + 'px';
+  if (bar) {
+    const sixtyDays = 1000 * 60 * 60 * 24 * 60;
+    const pct = Math.max(8, Math.min(100, 100 - (diff / sixtyDays) * 100));
+    bar.style.width = pct + '%';
+  }
+}
+
+window.updateReunionFromSeats = function (seats) {
+  reunionState.targetAt = pickReunionFromSeats(seats);
+  renderReunionCountdown();
+};
+
+hideReunionCountdown();
+setInterval(renderReunionCountdown, 1000);
+</script>
+
+</body>
+</html>
