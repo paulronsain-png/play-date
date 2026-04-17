@@ -1,4 +1,5 @@
 let boardFlipped = false;
+window.isBoardFlipped = () => boardFlipped;
 
 function renderCoords() {
   const ranks = ['8','7','6','5','4','3','2','1'];
@@ -14,7 +15,9 @@ function renderCoords() {
 
 function renderBoard(state) {
   const el = document.getElementById('board');
+  const savedArrows = el.querySelector('#robot-arrows');
   el.innerHTML = '';
+  if (savedArrows) el.appendChild(savedArrows);
   renderCoords();
 
   const showHints = document.getElementById('toggle-hints').checked;

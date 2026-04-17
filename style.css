@@ -90,7 +90,7 @@ body:not(.light-mode):not(.cream-mode):not(.og-mode) .bg-texture {
   justify-content: center;
   flex-wrap: wrap;
   gap: 0.6rem;
-  padding: calc(env(safe-area-inset-top) + 0.75rem) 1.5rem 0.75rem;
+  padding: calc(env(safe-area-inset-top) + 0.5rem) 1.5rem 0.4rem;
   /* no background — let board glow bleed through */
   pointer-events: none;
 }
@@ -110,53 +110,6 @@ body:not(.light-mode):not(.cream-mode):not(.og-mode) .bg-texture {
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 4px 24px rgba(0,0,0,0.18);
 }
 
-.countdown-banner {
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(60px) saturate(2.2);
-  -webkit-backdrop-filter: blur(60px) saturate(2.2);
-  border: 1px solid rgba(255,255,255,0.16);
-  border-radius: 999px;
-  padding: 0.45rem 1.1rem;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 4px 24px rgba(0,0,0,0.18);
-  font-family: var(--font-display);
-  font-size: 0.8rem;
-  letter-spacing: 0.05em;
-  color: var(--gold-dim);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-.countdown-text {
-  margin-bottom: 0.35rem;
-}
-
-.countdown-label {
-  margin-right: 0.5rem;
-  opacity: 0.75;
-}
-
-#countdown-timer {
-  color: var(--gold);
-  font-weight: 600;
-}
-
-.countdown-bar-track {
-  width: var(--countdown-text-width, 300px);
-  height: 5px;
-  background: var(--panel-border);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.countdown-bar-fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
-  border-radius: 3px;
-  transition: width 1s linear;
-}
 
 .logo {
   display: flex;
@@ -210,12 +163,8 @@ nav { display: flex; gap: 0.5rem; }
   transition: width 0.22s ease, background 0.2s ease, border-color 0.2s ease;
 }
 
-.theme-menu-wrap:hover,
-.theme-menu-wrap:focus-within,
-.theme-menu-wrap.open {
-  width: 8.3rem;
-  background: rgba(255,255,255,0.07);
-  border-color: rgba(255,255,255,0.22);
+.theme-menu {
+  display: none !important;
 }
 
 #theme-toggle {
@@ -311,8 +260,8 @@ main {
   align-items: center;
   justify-content: center;
   gap: 1.5rem;
-  /* top padding accounts for fixed top-bar height (~110px) */
-  padding: calc(env(safe-area-inset-top) + 110px) 1.5rem calc(2rem + env(safe-area-inset-bottom));
+  /* top padding accounts for fixed top-bar height */
+  padding: calc(env(safe-area-inset-top) + 72px) 1.5rem calc(2rem + env(safe-area-inset-bottom));
 }
 
 .panel {
@@ -714,6 +663,7 @@ main {
   display: grid;
   grid-template-columns: repeat(8, 64px);
   grid-template-rows: repeat(8, 64px);
+  position: relative;
   border: 3px solid var(--gold-dim);
   border-radius: 4px;
   overflow: hidden;
@@ -1292,9 +1242,10 @@ main {
 @media (max-width: 1100px) {
   main { flex-direction: column; align-items: center; }
   .panel { width: 512px; flex-direction: row; flex-wrap: wrap; }
-  .panel-left { order: 2; }
-  .panel-right { order: 3; }
   .board-area { order: 1; }
+  .panel-left { order: 2; }
+  .mobile-robot-slot { order: 3; }
+  .panel-right { order: 4; }
   .controls { flex-direction: row; }
   .ctrl-btn { flex: 1; }
 }
@@ -1414,7 +1365,10 @@ main {
 
   /* Right panel: controls in a 2×2 grid */
   .panel-right { gap: 0.6rem; }
-  .status-box { padding: 0.6rem 0.75rem; }
+  .status-box { display: none; }
+  /* Mobile robot slot: show below player cards */
+  .mobile-robot-slot { display: flex; justify-content: center; }
+  .mobile-robot-slot .robot-btn { width: 100%; }
   .controls {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1432,13 +1386,10 @@ main {
   .nav-pills { padding: 0.2rem; }
   .nav-btn { font-size: 0.65rem; padding: 0.35rem 0.7rem; }
   .theme-menu-wrap { width: 2.2rem; }
-  .theme-menu-wrap:hover,
-  .theme-menu-wrap:focus-within,
-  .theme-menu-wrap.open { width: 7.6rem; }
   #theme-toggle { width: 2rem; padding: 0.3rem 0.2rem; }
   .theme-option { width: 1.65rem; height: 1.65rem; font-size: 0.78rem; }
   .countdown-banner { font-size: 0.65rem; padding: 0.35rem 0.8rem; border-radius: 14px; }
-  main { padding-top: calc(env(safe-area-inset-top) + 120px); }
+  main { padding-top: calc(env(safe-area-inset-top) + 80px); }
 
   /* No floating on mobile (perf + layout) */
   .settings-box, .share-box { animation: none; }
@@ -1507,6 +1458,7 @@ main {
 
 /* On desktop, always show collapsible content and hide the toggle */
 @media (min-width: 601px) {
+  .mobile-robot-slot { display: none; }
   .panel-toggle { display: none; }
   .panel-collapsible { display: contents; }
 
@@ -1562,61 +1514,6 @@ main {
   }
 }
 
-#loading-screen {
-  position: fixed;
-  inset: 0;
-  background: #05060f;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  transition: opacity 0.5s ease;
-}
-
-.loading-logo {
-  width: 200px;
-  border-radius: 28px;
-  margin-bottom: 1.2rem;
-  box-shadow:
-    0 0 18px rgba(235, 247, 255, 0.55),
-    0 0 38px rgba(214, 236, 255, 0.45),
-    0 14px 38px rgba(0, 0, 0, 0.42);
-}
-
-#loading-text {
-  font-family: var(--font-display);
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #8ecae6;
-  letter-spacing: 0.08em;
-  text-transform: none;
-  text-shadow: none;
-  margin-bottom: 1.4rem;
-}
-
-.loading-bar-track {
-  width: 180px;
-  height: 4px;
-  background: rgba(255,255,255,0.14);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-@keyframes loading-progress {
-  0%   { width: 0%; }
-  40%  { width: 60%; }
-  70%  { width: 80%; }
-  100% { width: 100%; }
-}
-
-.loading-bar-fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #6aaed6, #8ecae6);
-  border-radius: 4px;
-  animation: loading-progress 2s ease-out forwards;
-}
 
 .dark-mode {
   --bg: #1c1c1e;
@@ -1654,7 +1551,6 @@ html:has(body.light-mode) { background: #1a3a2e; }
     radial-gradient(ellipse 50% 40% at 60% 20%, rgba(30,100,65,0.14) 0%, transparent 50%),
     radial-gradient(ellipse 40% 35% at 30% 75%, rgba(50,130,85,0.12) 0%, transparent 50%);
 }
-.light-mode #loading-screen { background: #05060f; }
 
 /* nav / countdown */
 .light-mode .nav-pills,
@@ -1861,7 +1757,6 @@ html:has(body.og-mode) { background: #1f2125; }
   background: radial-gradient(circle at 50% 10%, #262a31 0%, #1f2125 58%, #191b1f 100%);
 }
 .og-mode .bg-texture { background-image: none; }
-.og-mode #loading-screen { background: #05060f; }
 
 .classic-mode {
   --bg: #3b2818;
@@ -2098,7 +1993,6 @@ html:has(body.cream-mode) { background: #e7f5ff; }
   filter: blur(2px);
   animation: creamCloudDriftB 74s linear infinite;
 }
-.cream-mode #loading-screen { background: #05060f; }
 
 @keyframes creamCloudDriftA {
   0%   { transform: translateX(0); }
@@ -3116,16 +3010,40 @@ body.auth-locked .chat-panel {
   letter-spacing: 0.03em;
 }
 
+.profile-menu-email-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .profile-menu-email {
   margin-top: 2px;
   font-size: 0.78rem;
   color: rgba(196, 219, 240, 0.86);
 }
 
+.profile-change-pwd-link {
+  margin-top: 2px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.7rem;
+  color: rgba(140, 180, 220, 0.7);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
+.profile-change-pwd-link:hover {
+  color: rgba(180, 210, 240, 1);
+}
+
 .profile-menu-actions {
   margin-top: 10px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
@@ -3249,6 +3167,456 @@ body.auth-locked .chat-panel {
   color: #bff5d6;
 }
 
+.partner-invite-modal {
+  max-width: 360px;
+}
+
+/* ── Ask Robot ─────────────────────────────────────────────────────────────── */
+.robot-btn {
+  background: linear-gradient(135deg, rgba(80,50,130,0.7), rgba(50,30,90,0.7));
+  border-color: rgba(160,120,240,0.4);
+  color: rgba(210,185,255,0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.robot-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(100,65,160,0.85), rgba(65,40,115,0.85));
+  border-color: rgba(180,140,255,0.6);
+}
+.robot-btn:disabled {
+  opacity: 0.75;
+}
+.robot-btn-label {
+  font-size: inherit;
+  line-height: 1;
+}
+
+/* ── EVE face ───────────────────────────────────────────────────────────────── */
+.eve-face {
+  flex-shrink: 0;
+  display: block;
+  width: 40px;
+  height: 46px;
+  overflow: visible;
+  animation: eve-idle-bob 4.2s ease-in-out infinite;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3));
+}
+
+@keyframes eve-idle-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  28%      { transform: translateY(-2.5px) rotate(-1.5deg); }
+  62%      { transform: translateY(-1px) rotate(1deg); }
+}
+
+.eve-screen { transition: fill 0.4s ease; }
+.eve-blush-l, .eve-blush-r { transition: opacity 0.4s ease; }
+.eve-heart-l, .eve-heart-r { transition: opacity 0.25s ease; }
+.eve-scanline               { transition: opacity 0.2s ease; }
+.eve-scanlines-l rect,
+.eve-scanlines-r rect       { transition: fill 0.3s ease; }
+
+/* ── IDLE: look-around + blink ─────────────────────────────────────────────── */
+.eve-look-l,
+.eve-look-r { animation: eve-look 12s ease-in-out infinite; }
+
+.eve-blink-l,
+.eve-blink-r {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  /* Blinking is JS-driven for perfect sync — see robot.js scheduleBlink() */
+  filter: drop-shadow(0 0 3px rgba(58,136,248,1)) drop-shadow(0 0 8px rgba(58,136,248,0.7));
+}
+
+/* Synchronized blink — both eyes get this class at the exact same JS tick */
+#btn-ask-robot.robot-blink .eve-blink-l,
+#btn-ask-robot.robot-blink .eve-blink-r {
+  animation: eve-quick-blink 0.22s ease-in-out !important;
+}
+@keyframes eve-quick-blink {
+  0%, 100% { transform: scaleY(1); }
+  45%, 55% { transform: scaleY(0.04); }
+}
+
+.eve-scanlines-l rect,
+.eve-scanlines-r rect { animation: eve-scan-pulse 2.8s ease-in-out infinite; }
+
+@keyframes eve-scan-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+@keyframes eve-look {
+  0%        { transform: translate(0,     0);       }
+  4%, 8%    { transform: translate(-4px,  0.5px);   } /* dart left — board */
+  12%       { transform: translate(0,     0);        }
+  14%, 16%  { transform: translate(3px,  -3.5px);   } /* snap up-right */
+  19%       { transform: translate(0,     0);        }
+  23%, 27%  { transform: translate(1px,   3px);      } /* look down */
+  31%       { transform: translate(-4.5px,0);        } /* hard dart left */
+  32%       { transform: translate(-4.5px,0);        }
+  36%, 41%  { transform: translate(0,    -4px);      } /* look up */
+  44%       { transform: translate(0,     0);        }
+  48%, 60%  { transform: translate(-4px,  1px);      } /* long board stare */
+  63%, 64%  { transform: translate(4px,  -0.5px);   } /* snap right */
+  68%, 72%  { transform: translate(-2.5px,3px);      } /* down-left */
+  75%, 76%  { transform: translate(1px,  -4px);      } /* quick up */
+  80%, 86%  { transform: translate(0,     0);        } /* look at viewer */
+  90%, 96%  { transform: translate(-4px,  0.5px);   } /* board again */
+  100%      { transform: translate(0,     0);        }
+}
+
+@keyframes eve-blink {
+  0%      { transform: scaleY(1);    }
+  7%      { transform: scaleY(1);    }
+  8%      { transform: scaleY(0.04); }   /* quick blink */
+  9.5%    { transform: scaleY(1);    }
+  20%     { transform: scaleY(1);    }
+  22%     { transform: scaleY(0.45); }   /* curious squint — hold */
+  28%     { transform: scaleY(0.45); }
+  30%     { transform: scaleY(1);    }
+  38%     { transform: scaleY(1);    }
+  39%     { transform: scaleY(0.04); }   /* double blink */
+  40.5%   { transform: scaleY(1);    }
+  42%     { transform: scaleY(0.04); }
+  43.5%   { transform: scaleY(1);    }
+  53%     { transform: scaleY(1);    }
+  55%     { transform: scaleY(1.28); }   /* WIDE EYES */
+  59%     { transform: scaleY(1.28); }
+  61%     { transform: scaleY(1);    }
+  62%     { transform: scaleY(0.04); }   /* blink after wide */
+  63.5%   { transform: scaleY(1);    }
+  73%     { transform: scaleY(1);    }
+  76%     { transform: scaleY(0.55); }   /* sleepy half-close */
+  82%     { transform: scaleY(0.55); }
+  85%     { transform: scaleY(0.04); }   /* slow blink out */
+  88%     { transform: scaleY(1);    }
+  100%    { transform: scaleY(1);    }
+}
+
+/* ── THINKING ──────────────────────────────────────────────────────────────── */
+#btn-ask-robot.robot-thinking .eve-face {
+  animation: eve-think-tilt 0.7s ease-in-out infinite;
+  filter: drop-shadow(0 0 9px rgba(255,175,30,0.85));
+}
+#btn-ask-robot.robot-thinking .eve-screen { fill: #110900; }
+#btn-ask-robot.robot-thinking .eve-look-l,
+#btn-ask-robot.robot-thinking .eve-look-r { animation: eve-dart 0.8s linear infinite; }
+#btn-ask-robot.robot-thinking .eve-blink-l {
+  animation: none; transform: scaleY(0.35);
+  filter: drop-shadow(0 0 3px rgba(255,160,20,1)) drop-shadow(0 0 7px rgba(255,160,20,0.6));
+}
+#btn-ask-robot.robot-thinking .eve-blink-r {
+  animation: none; transform: scaleY(0.75);
+  filter: drop-shadow(0 0 3px rgba(255,160,20,1)) drop-shadow(0 0 7px rgba(255,160,20,0.6));
+}
+#btn-ask-robot.robot-thinking .eve-scanlines-l rect,
+#btn-ask-robot.robot-thinking .eve-scanlines-r rect { fill: #ffaa28; }
+#btn-ask-robot.robot-thinking .eve-scanline {
+  opacity: 0.65;
+  animation: eve-scanline-sweep 1.1s linear infinite;
+}
+
+@keyframes eve-think-tilt {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25%      { transform: translateY(-2px) rotate(-6deg); }
+  75%      { transform: translateY(-1px) rotate(5deg); }
+}
+@keyframes eve-dart {
+  0%   { transform: translate(0,      0);    }
+  25%  { transform: translate(-3.5px,-2px);  }
+  50%  { transform: translate(3.5px,  1px);  }
+  75%  { transform: translate(-2px,   2.5px);}
+  100% { transform: translate(0,      0);    }
+}
+@keyframes eve-scanline-sweep {
+  0%   { transform: translateY(-12px); opacity: 0; }
+  8%   { opacity: 0.65; }
+  92%  { opacity: 0.65; }
+  100% { transform: translateY(12px); opacity: 0; }
+}
+
+/* ── HAPPY ─────────────────────────────────────────────────────────────────── */
+#btn-ask-robot.robot-happy .eve-face {
+  animation: eve-happy-jump 0.48s ease-out 3;
+  filter: drop-shadow(0 0 12px rgba(30,220,140,0.95));
+}
+#btn-ask-robot.robot-happy .eve-look-l,
+#btn-ask-robot.robot-happy .eve-look-r { animation: none; transform: translate(0, 2.5px); }
+#btn-ask-robot.robot-happy .eve-blink-l,
+#btn-ask-robot.robot-happy .eve-blink-r {
+  animation: eve-happy-squint 0.18s ease-out forwards;
+  filter: drop-shadow(0 0 5px rgba(55,235,255,1)) drop-shadow(0 0 12px rgba(55,235,255,0.7));
+}
+#btn-ask-robot.robot-happy .eve-scanlines-l rect,
+#btn-ask-robot.robot-happy .eve-scanlines-r rect { fill: #38ecff; }
+#btn-ask-robot.robot-happy .eve-blush-l,
+#btn-ask-robot.robot-happy .eve-blush-r { opacity: 0.35; }
+
+@keyframes eve-happy-jump {
+  0%   { transform: translateY(0) scale(1); }
+  28%  { transform: translateY(-7px) scale(1.13); }
+  55%  { transform: translateY(-2px) scale(1.05); }
+  100% { transform: translateY(0) scale(1); }
+}
+@keyframes eve-happy-squint {
+  to { transform: scaleY(0.1); }
+}
+
+/* ── MOVE-HAPPY ─────────────────────────────────────────────────────────────── */
+#btn-ask-robot.robot-move-happy .eve-face {
+  animation: eve-hop 0.38s ease-out 2;
+  filter: drop-shadow(0 0 8px rgba(30,220,140,0.8));
+}
+#btn-ask-robot.robot-move-happy .eve-look-l,
+#btn-ask-robot.robot-move-happy .eve-look-r { animation: none; transform: translate(0, 2.5px); }
+#btn-ask-robot.robot-move-happy .eve-blink-l,
+#btn-ask-robot.robot-move-happy .eve-blink-r {
+  animation: eve-happy-squint 0.14s ease-out forwards;
+  filter: drop-shadow(0 0 4px rgba(55,235,255,0.9)) drop-shadow(0 0 8px rgba(55,235,255,0.5));
+}
+#btn-ask-robot.robot-move-happy .eve-scanlines-l rect,
+#btn-ask-robot.robot-move-happy .eve-scanlines-r rect { fill: #38ecff; }
+
+@keyframes eve-hop {
+  0%   { transform: translateY(0); }
+  38%  { transform: translateY(-5px) scale(1.08); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+/* ── LOVE ───────────────────────────────────────────────────────────────────── */
+#btn-ask-robot.robot-love .eve-face {
+  animation: eve-love-bounce 0.42s ease-in-out 5;
+  filter: drop-shadow(0 0 14px rgba(255,50,140,1));
+}
+#btn-ask-robot.robot-love .eve-screen { fill: #150009; }
+#btn-ask-robot.robot-love .eve-look-l,
+#btn-ask-robot.robot-love .eve-look-r { animation: none; transform: translate(0, 0); }
+/* Keep blink visible but hide scan content — hearts replace them */
+#btn-ask-robot.robot-love .eve-blink-l,
+#btn-ask-robot.robot-love .eve-blink-r { animation: none; transform: scaleY(1); filter: none; }
+#btn-ask-robot.robot-love .eve-scanlines-l,
+#btn-ask-robot.robot-love .eve-scanlines-r { opacity: 0; }
+#btn-ask-robot.robot-love .eve-eye-glow-l,
+#btn-ask-robot.robot-love .eve-eye-glow-r { opacity: 0; }
+#btn-ask-robot.robot-love .eve-eye-spec-l,
+#btn-ask-robot.robot-love .eve-eye-spec-r { opacity: 0; }
+/* Heart eyes */
+#btn-ask-robot.robot-love .eve-heart-eye-l { opacity: 1; animation: eve-heart-pulse 0.44s ease-in-out infinite; }
+#btn-ask-robot.robot-love .eve-heart-eye-r { opacity: 1; animation: eve-heart-pulse 0.44s ease-in-out 0.22s infinite; }
+#btn-ask-robot.robot-love .eve-heart-spec-l,
+#btn-ask-robot.robot-love .eve-heart-spec-r { opacity: 1; }
+#btn-ask-robot.robot-love .eve-blush-l,
+#btn-ask-robot.robot-love .eve-blush-r { opacity: 0.9; }
+
+@keyframes eve-love-bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  40%      { transform: translateY(-6px) scale(1.13); }
+}
+#btn-ask-robot.robot-love .eve-awww { opacity: 1; }
+#btn-ask-robot.robot-love .awww-1 { animation: eve-awww-float 1.6s ease-out 0.1s 1 forwards; }
+#btn-ask-robot.robot-love .awww-2 { animation: eve-awww-float 1.8s ease-out 0.65s 1 forwards; }
+@keyframes eve-awww-float {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.7); }
+  18%  { opacity: 1; }
+  80%  { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(-3px, -26px) scale(1.08); }
+}
+@keyframes eve-heart-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.22); }
+}
+
+/* ── IDLE BOUNCE ────────────────────────────────────────────────────────────── */
+#btn-ask-robot.robot-idle-bounce .eve-face {
+  animation: eve-idle-bounce 1.8s cubic-bezier(0.36,0.07,0.19,0.97);
+}
+@keyframes eve-idle-bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  20%      { transform: translateY(-9px) scale(1.06); }
+  45%      { transform: translateY(-3px) scale(1.02); }
+  65%      { transform: translateY(-7px) scale(1.04); }
+  85%      { transform: translateY(-1px) scale(1.01); }
+}
+
+/* ── IDLE TILT ──────────────────────────────────────────────────────────────── */
+#btn-ask-robot.robot-idle-tilt .eve-face {
+  animation: eve-idle-tilt 2.4s ease-in-out;
+}
+@keyframes eve-idle-tilt {
+  0%        { transform: rotate(0deg) translateY(0); }
+  22%       { transform: rotate(-13deg) translateY(-3px); }
+  55%       { transform: rotate(11deg) translateY(-2px); }
+  80%       { transform: rotate(-4deg) translateY(-1px); }
+  100%      { transform: rotate(0deg) translateY(0); }
+}
+
+/* ── WINK ───────────────────────────────────────────────────────────────────── */
+#btn-ask-robot.robot-wink-l .eve-blink-l { animation: eve-wink 1.3s ease-in-out !important; }
+#btn-ask-robot.robot-wink-r .eve-blink-r { animation: eve-wink 1.3s ease-in-out !important; }
+@keyframes eve-wink {
+  0%, 18%, 82%, 100% { transform: scaleY(1); }
+  38%, 62%           { transform: scaleY(0.05); }
+}
+
+/* ── EXCITED (move reaction) ────────────────────────────────────────────────── */
+#btn-ask-robot.robot-excited .eve-face {
+  animation: eve-excited 0.55s ease-out 3;
+  filter: drop-shadow(0 0 14px rgba(55,230,160,1)) drop-shadow(0 0 6px rgba(55,230,160,0.6));
+}
+#btn-ask-robot.robot-excited .eve-look-l,
+#btn-ask-robot.robot-excited .eve-look-r { animation: none; transform: translate(0, 3px); }
+#btn-ask-robot.robot-excited .eve-blink-l,
+#btn-ask-robot.robot-excited .eve-blink-r {
+  animation: eve-excited-squint 0.12s ease-out 0.15s forwards;
+  filter: drop-shadow(0 0 6px rgba(55,235,255,1)) drop-shadow(0 0 14px rgba(55,235,255,0.7));
+}
+#btn-ask-robot.robot-excited .eve-scanlines-l rect,
+#btn-ask-robot.robot-excited .eve-scanlines-r rect { fill: #38ecff; }
+#btn-ask-robot.robot-excited .eve-blush-l,
+#btn-ask-robot.robot-excited .eve-blush-r { opacity: 0.5; }
+@keyframes eve-excited {
+  0%   { transform: translateY(0) scale(1) rotate(0deg); }
+  20%  { transform: translateY(-13px) scale(1.12) rotate(-4deg); }
+  45%  { transform: translateY(-4px) scale(1.04) rotate(3deg); }
+  70%  { transform: translateY(-9px) scale(1.08) rotate(-2deg); }
+  100% { transform: translateY(0) scale(1) rotate(0deg); }
+}
+@keyframes eve-excited-squint {
+  to { transform: scaleY(0.08); }
+}
+
+/* ── BORED (pre-sleep) ──────────────────────────────────────────────────────── */
+#btn-ask-robot.robot-bored .eve-look-l,
+#btn-ask-robot.robot-bored .eve-look-r { opacity: 0; transition: opacity 0.5s ease; }
+#btn-ask-robot.robot-bored .eve-bored-text { animation: eve-bored-show 2s ease-in-out forwards; }
+#btn-ask-robot.robot-bored .eve-face { filter: drop-shadow(0 0 6px rgba(100,100,190,0.35)); }
+@keyframes eve-bored-show {
+  0%   { opacity: 0; }
+  25%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0.2; }
+}
+
+/* ── SLEEP ──────────────────────────────────────────────────────────────────── */
+#btn-ask-robot.robot-sleep .eve-face {
+  animation: eve-sleep-drop 0.9s cubic-bezier(0.4,0,0.2,1) forwards;
+  filter: drop-shadow(0 0 6px rgba(100,100,200,0.4));
+}
+#btn-ask-robot.robot-sleep .eve-blink-l,
+#btn-ask-robot.robot-sleep .eve-blink-r {
+  animation: none !important;
+  transform: scaleY(0.06) !important;
+}
+#btn-ask-robot.robot-sleep .eve-scanlines-l rect,
+#btn-ask-robot.robot-sleep .eve-scanlines-r rect { fill: #4444aa; opacity: 0.4; }
+#btn-ask-robot.robot-sleep .eve-zzz { opacity: 1; }
+#btn-ask-robot.robot-sleep .zzz-1 { animation: eve-zzz 2.2s ease-in-out 0.6s infinite; }
+#btn-ask-robot.robot-sleep .zzz-2 { animation: eve-zzz 2.2s ease-in-out 1.15s infinite; }
+#btn-ask-robot.robot-sleep .zzz-3 { animation: eve-zzz 2.2s ease-in-out 1.7s infinite; }
+@keyframes eve-sleep-drop {
+  0%   { transform: rotate(0deg) translate(0,0); }
+  100% { transform: rotate(48deg) translate(2px, 6px); }
+}
+@keyframes eve-zzz {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.5); }
+  15%  { opacity: 1; }
+  85%  { opacity: 0.7; }
+  100% { opacity: 0; transform: translate(-8px, -20px) scale(1.1); }
+}
+
+/* ── SLEEP WAKE ─────────────────────────────────────────────────────────────── */
+#btn-ask-robot.robot-sleep-wake .eve-face {
+  animation: eve-sleep-wake 0.7s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes eve-sleep-wake {
+  0%   { transform: rotate(48deg) translate(2px, 6px); }
+  100% { transform: rotate(0deg) translate(0, 0); }
+}
+
+/* ── WHISTLING ──────────────────────────────────────────────────────────────── */
+#btn-ask-robot.robot-whistling .eve-face {
+  animation: eve-whistle-bob 0.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(140,200,255,0.7));
+}
+@keyframes eve-whistle-bob {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(-6px) scale(1.04); }
+}
+
+.robot-panel {
+  margin-top: 8px;
+  border: 1px solid rgba(160,120,240,0.3);
+  border-radius: 10px;
+  background: rgba(18,10,36,0.75);
+  padding: 8px 10px;
+  font-size: 0.78rem;
+}
+
+.robot-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.robot-panel-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(180,150,255,0.75);
+}
+
+.robot-panel-close {
+  background: none;
+  border: none;
+  color: rgba(180,150,255,0.55);
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 0 2px;
+  line-height: 1;
+}
+.robot-panel-close:hover { color: rgba(210,185,255,0.9); }
+
+.robot-move-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.robot-move-rank {
+  font-size: 0.68rem;
+  font-weight: 700;
+  width: 22px;
+  text-align: center;
+  border-radius: 4px;
+  padding: 1px 3px;
+}
+.robot-rank-1 { background: rgba(212,175,55,0.25);  color: #d4af37; }
+.robot-rank-2 { background: rgba(180,180,190,0.2);  color: #b0b0be; }
+.robot-rank-3 { background: rgba(150,100,60,0.2);   color: #c8855a; }
+
+.robot-move-uci {
+  color: rgba(220,210,255,0.9);
+  font-family: monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+}
+
+.robot-move-score {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: rgba(160,200,140,0.85);
+}
+
+
+
+#partner-invite-overlay {
+  z-index: 3000;
+}
+
 .cream-mode .profile-menu {
   background: rgba(255,255,255,0.32);
   border-color: rgba(184, 213, 236, 0.66);
@@ -3260,3 +3628,348 @@ body.auth-locked .chat-panel {
   background: rgba(255,255,255,0.3);
   border-color: rgba(176, 207, 232, 0.56);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   LIBRARY MODE — Cozy lofi library
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── CSS variables ── */
+body.library-mode {
+  --bg:           #0e0700;
+  --bg2:          rgba(22, 11, 3, 0.7);
+  --panel:        rgba(18, 8, 2, 0.92);
+  --panel-border: rgba(185, 128, 48, 0.42);
+  --gold:         #d4a040;
+  --gold-light:   #f0c060;
+  --gold-dim:     #9a7230;
+  --white-sq:     #daa858;
+  --black-sq:     #6b3012;
+  --cream:        #f5e6c8;
+  --text:         #f2e4c0;
+  --text-dim:     #c09060;
+  --select:       rgba(210,155,55,0.55);
+  --hint:         rgba(200,150,55,0.3);
+  --danger:       #e05540;
+  --shadow:       0 16px 50px rgba(0,0,0,0.8);
+}
+
+/* ── Background ── */
+.library-mode body,
+body.library-mode {
+  background: #120800;
+}
+.library-mode .bg-texture { display: none; }
+
+/* ── Library background scene ── */
+#library-bg {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+#library-svg {
+  width: 100%;
+  height: 100%;
+}
+body.library-mode #library-bg { display: block; }
+
+/* ── Lofi animations ── */
+@keyframes lib-rain-fall {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(-34px, 120px); }
+}
+@keyframes lib-mote-float {
+  0%   { transform: translate(0, 0);    opacity: 0; }
+  20%  { opacity: 0.7; }
+  80%  { opacity: 0.4; }
+  100% { transform: translate(-15px, -80px); opacity: 0; }
+}
+@keyframes lib-steam {
+  0%   { transform: translateY(0)   scaleX(1);    opacity: 0; }
+  20%  { opacity: 0.5; }
+  60%  { transform: translateY(-18px) scaleX(1.3); opacity: 0.3; }
+  100% { transform: translateY(-32px) scaleX(0.8); opacity: 0; }
+}
+@keyframes lib-lamp-pulse {
+  0%, 100% { opacity: 1; }
+  45%       { opacity: 0.82; }
+  50%       { opacity: 0.92; }
+  75%       { opacity: 0.88; }
+}
+@keyframes lib-cat-breathe {
+  0%, 100% { transform: scaleY(1); }
+  50%       { transform: scaleY(1.06); }
+}
+@keyframes lib-candle-flicker {
+  0%, 100% { transform: scaleX(1)   scaleY(1)   translateY(0); opacity: 1; }
+  25%       { transform: scaleX(0.8) scaleY(1.1) translateY(-1px); opacity: 0.9; }
+  50%       { transform: scaleX(1.1) scaleY(0.9) translateY(1px); opacity: 0.95; }
+  75%       { transform: scaleX(0.9) scaleY(1.05) translateY(-0.5px); opacity: 0.88; }
+}
+.lib-candle-flame { animation: lib-candle-flicker 1.8s ease-in-out infinite; transform-origin: center bottom; }
+@keyframes lib-star-twinkle {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 0.2; }
+}
+
+.lib-rain { animation: lib-rain-fall 1.8s linear infinite; }
+.lib-lamp-flicker { animation: lib-lamp-pulse 4s ease-in-out infinite; }
+.lib-cat-breathe { animation: lib-cat-breathe 3.2s ease-in-out infinite; transform-origin: center; }
+
+.lib-mote-1  { animation: lib-mote-float 9s  ease-in-out 0s    infinite; }
+.lib-mote-2  { animation: lib-mote-float 12s ease-in-out 1.5s  infinite; }
+.lib-mote-3  { animation: lib-mote-float 8s  ease-in-out 3s    infinite; }
+.lib-mote-4  { animation: lib-mote-float 14s ease-in-out 0.8s  infinite; }
+.lib-mote-5  { animation: lib-mote-float 10s ease-in-out 4.5s  infinite; }
+.lib-mote-6  { animation: lib-mote-float 11s ease-in-out 2.2s  infinite; }
+.lib-mote-7  { animation: lib-mote-float 13s ease-in-out 5.8s  infinite; }
+.lib-mote-8  { animation: lib-mote-float 9s  ease-in-out 1.1s  infinite; }
+.lib-mote-9  { animation: lib-mote-float 15s ease-in-out 3.6s  infinite; }
+.lib-mote-10 { animation: lib-mote-float 10s ease-in-out 6.4s  infinite; }
+
+.lib-steam-1 { animation: lib-steam 2.8s ease-out 0s   infinite; }
+.lib-steam-2 { animation: lib-steam 3.2s ease-out 0.9s infinite; }
+.lib-steam-3 { animation: lib-steam 2.6s ease-out 1.7s infinite; }
+
+.lib-stars circle:nth-child(odd)  { animation: lib-star-twinkle 3s ease-in-out infinite; }
+.lib-stars circle:nth-child(even) { animation: lib-star-twinkle 4s ease-in-out 1.5s infinite; }
+
+/* ── App z-index: sit above the library bg ── */
+body.library-mode #auth-gate {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Nav bar ── */
+body.library-mode .top-bar {
+  background: none !important;
+  backdrop-filter: none !important;
+  border-bottom: none !important;
+}
+body.library-mode main {
+  padding-top: calc(env(safe-area-inset-top) + 88px) !important;
+}
+body.library-mode .nav-pills {
+  background: rgba(14, 7, 2, 0.78) !important;
+  border: 1px solid rgba(185, 128, 48, 0.35) !important;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(220,170,80,0.08) !important;
+  backdrop-filter: blur(20px) saturate(1.4) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.4) !important;
+}
+body.library-mode .nav-btn {
+  color: #d4a848 !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.01em !important;
+}
+body.library-mode .nav-btn:hover {
+  color: #f5d870 !important;
+  background: rgba(200,150,50,0.1) !important;
+  border-color: rgba(200,150,50,0.2) !important;
+}
+body.library-mode .nav-btn.active {
+  color: #f0cc60 !important;
+  background: rgba(200,145,40,0.16) !important;
+  border-color: rgba(200,145,40,0.3) !important;
+}
+
+/* ── Theme toggle pill ── */
+body.library-mode .theme-menu-wrap {
+  background: rgba(14, 7, 2, 0.78) !important;
+  border-color: rgba(185, 128, 48, 0.35) !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.5) !important;
+}
+body.library-mode #theme-toggle {
+  color: #d4a848 !important;
+}
+body.library-mode .theme-option {
+  color: #c8a050 !important;
+}
+body.library-mode .theme-option:hover,
+body.library-mode .theme-option.active {
+  color: #f0cc80 !important;
+  background: rgba(200,150,50,0.12) !important;
+}
+
+/* ── All panels ── */
+body.library-mode .panel,
+body.library-mode .player-card,
+body.library-mode .status-box,
+body.library-mode .robot-panel,
+body.library-mode #robot-panel,
+body.library-mode .lobby-panel,
+body.library-mode .share-box,
+body.library-mode .settings-box,
+body.library-mode .profile-edit,
+body.library-mode .profile-history-item {
+  background: rgba(16, 7, 2, 0.88) !important;
+  backdrop-filter: blur(12px) saturate(1.3) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(1.3) !important;
+  border-color: rgba(185, 128, 48, 0.32) !important;
+  box-shadow: 0 4px 28px rgba(0,0,0,0.65), inset 0 1px 0 rgba(220,170,80,0.06) !important;
+}
+
+/* ── Profile / dropdown menus ── */
+body.library-mode .profile-menu {
+  background: rgba(14, 6, 1, 0.96) !important;
+  border-color: rgba(185, 128, 48, 0.4) !important;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(220,170,80,0.08) !important;
+}
+
+/* ── Player cards ── */
+body.library-mode .player-card {
+  border-color: rgba(185, 128, 48, 0.28) !important;
+}
+body.library-mode .player-card.active {
+  border-color: rgba(215, 160, 55, 0.55) !important;
+  box-shadow: 0 4px 28px rgba(0,0,0,0.65), 0 0 0 1px rgba(215,160,55,0.18), inset 0 1px 0 rgba(220,170,80,0.08) !important;
+}
+body.library-mode .player-name {
+  color: #f0e0b8 !important;
+}
+body.library-mode .player-subtext,
+body.library-mode .player-tag {
+  color: #a07840 !important;
+}
+
+/* ── Status box ── */
+body.library-mode .status-box {
+  color: #e8d090 !important;
+}
+body.library-mode .status-label {
+  color: #d4a848 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  font-size: 0.72rem !important;
+}
+
+/* ── Buttons ── */
+body.library-mode .ctrl-btn,
+body.library-mode .robot-btn {
+  background: rgba(22, 10, 2, 0.75) !important;
+  border-color: rgba(165, 112, 40, 0.38) !important;
+  color: #d8b060 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(220,170,80,0.05) !important;
+}
+body.library-mode .ctrl-btn:hover,
+body.library-mode .robot-btn:hover {
+  background: rgba(30, 14, 3, 0.9) !important;
+  border-color: rgba(210, 148, 52, 0.6) !important;
+  color: #f5cc70 !important;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.5), 0 0 0 1px rgba(210,148,52,0.15), inset 0 1px 0 rgba(220,170,80,0.08) !important;
+}
+body.library-mode .ctrl-btn.primary {
+  background: rgba(160, 100, 20, 0.35) !important;
+  border-color: rgba(210, 148, 52, 0.55) !important;
+  color: #f5cc70 !important;
+}
+body.library-mode .ctrl-btn.primary:hover {
+  background: rgba(185, 118, 24, 0.48) !important;
+  border-color: rgba(230, 170, 65, 0.72) !important;
+  color: #ffe090 !important;
+}
+
+/* ── Settings labels & inputs ── */
+body.library-mode .setting-row {
+  border-bottom-color: rgba(185,128,48,0.12) !important;
+  color: #d8b870 !important;
+}
+body.library-mode .setting-row label {
+  color: #d8b870 !important;
+}
+body.library-mode .setting-row select {
+  background: rgba(20, 9, 2, 0.8) !important;
+  border-color: rgba(185,128,48,0.3) !important;
+  color: #e8cc88 !important;
+}
+body.library-mode .setting-heading,
+body.library-mode .settings-title {
+  color: #d4a848 !important;
+  letter-spacing: 0.08em !important;
+}
+
+/* ── Share row ── */
+body.library-mode .share-row input {
+  background: rgba(20, 9, 2, 0.7) !important;
+  border-color: rgba(185,128,48,0.3) !important;
+  color: #e0c888 !important;
+}
+
+/* ── Modal ── */
+body.library-mode .modal-backdrop {
+  background: rgba(5, 2, 0, 0.72) !important;
+  backdrop-filter: blur(4px) !important;
+}
+body.library-mode .modal-box,
+body.library-mode .modal {
+  background: rgba(16, 7, 2, 0.96) !important;
+  border-color: rgba(185, 128, 48, 0.4) !important;
+  box-shadow: 0 12px 60px rgba(0,0,0,0.75), inset 0 1px 0 rgba(220,170,80,0.08) !important;
+  color: #f0e0b8 !important;
+}
+
+/* ── Wooden board ── */
+body.library-mode .board-wrapper {
+  box-shadow: 0 0 0 8px #5c3212, 0 0 0 16px #3d200a, 0 20px 60px rgba(0,0,0,0.7) !important;
+  border-radius: 4px;
+}
+body.library-mode .square.light {
+  background: radial-gradient(ellipse at 35% 35%, #e8c07a, #c4904a) !important;
+}
+body.library-mode .square.dark {
+  background: radial-gradient(ellipse at 35% 35%, #7e4020, #4e2008) !important;
+}
+body.library-mode .square.last-move {
+  background: rgba(220,170,80,0.38) !important;
+}
+body.library-mode .square.selected {
+  background: rgba(230,180,60,0.55) !important;
+}
+body.library-mode .square.in-check {
+  background: rgba(200,50,30,0.5) !important;
+}
+body.library-mode .square.hint-move::after {
+  background: rgba(200,160,60,0.55) !important;
+}
+body.library-mode .square.hint-capture::after {
+  background: rgba(200,100,40,0.55) !important;
+  border-color: rgba(200,120,40,0.7) !important;
+}
+
+/* ── Pieces on wood board ── */
+body.library-mode .piece-white {
+  color: #f5ead5 !important;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)) drop-shadow(0 0 6px rgba(240,200,100,0.4)) !important;
+  -webkit-text-stroke: 1px rgba(120,80,20,0.6) !important;
+}
+body.library-mode .piece-black {
+  color: #1a0c03 !important;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7)) drop-shadow(0 0 5px rgba(100,60,10,0.5)) !important;
+  -webkit-text-stroke: 1px rgba(80,40,5,0.8) !important;
+}
+
+/* ── Clock / timer ── */
+body.library-mode .player-clock {
+  color: #e0c080 !important;
+}
+
+/* ── Turn dot ── */
+body.library-mode .white-dot { background: #e8c880 !important; box-shadow: 0 0 8px rgba(232,200,128,0.7) !important; }
+body.library-mode .black-dot { background: #6b3810 !important; box-shadow: 0 0 8px rgba(107,56,16,0.6) !important; }
+
+
+/* ── Coords ── */
+body.library-mode .coords-top span,
+body.library-mode .coords-bottom span,
+body.library-mode .coords-left span,
+body.library-mode .coords-right span {
+  color: #c8a050 !important;
+  opacity: 0.7;
+}
+
+/* ── Scrollbar ── */
+body.library-mode ::-webkit-scrollbar-track { background: rgba(20, 10, 3, 0.5); }
+body.library-mode ::-webkit-scrollbar-thumb { background: rgba(160, 100, 40, 0.4); }

@@ -20,6 +20,7 @@
   const statusEl = byId('profile-menu-status');
   const logoutBtn = byId('profile-logout-btn');
   const changePwdBtn = byId('profile-change-password-btn');
+  const invitePartnerBtn = byId('profile-invite-partner-btn');
 
   if (!wrap || !btn || !menu) return;
 
@@ -212,7 +213,15 @@
       avatarPreview.src = avatar;
       avatarPreview.alt = name;
     }
+    if (invitePartnerBtn) {
+      const hasPartnerEmail = !!normalizeEmail(partnerEmailInput?.value || profile.reunionPartnerEmail || '');
+      invitePartnerBtn.disabled = !hasPartnerEmail;
+    }
     wrap.classList.toggle('hidden', !user);
+  }
+
+  function getPartnerEmailForInvite() {
+    return normalizeEmail(partnerEmailInput?.value || window.currentProfile?.reunionPartnerEmail || '');
   }
 
   btn.addEventListener('click', (e) => {
@@ -260,6 +269,10 @@
     } catch (_) {
       setStatus('Could not load this image file.');
     }
+  });
+
+  partnerEmailInput?.addEventListener('input', () => {
+    if (invitePartnerBtn) invitePartnerBtn.disabled = !getPartnerEmailForInvite();
   });
 
   saveProfileBtn?.addEventListener('click', async () => {
@@ -314,11 +327,59 @@
 
       if (avatarInput) avatarInput.value = '';
       setStatus('Profile updated.', true);
+      if (invitePartnerBtn) invitePartnerBtn.disabled = !normalizeEmail(nextProfile.reunionPartnerEmail);
       hydrateProfileUI();
     } catch (err) {
       setStatus(err?.message || 'Could not update profile.');
     } finally {
       saveProfileBtn.disabled = false;
+    }
+  });
+
+  invitePartnerBtn?.addEventListener('click', async () => {
+    const user = window.currentUser;
+    const db = window.db;
+    const gameId = String(window.GAME_ID || '').trim();
+    const partnerEmail = getPartnerEmailForInvite();
+    const senderName = String(window.currentProfile?.displayName || user?.email?.split('@')[0] || 'Your partner').trim() || 'Your partner';
+
+    if (!user?.uid || !db) {
+      setStatus('You need to be signed in.');
+      return;
+    }
+    if (!partnerEmail) {
+      setStatus('Set your partner email first.');
+      return;
+    }
+    if (!gameId) {
+      setStatus('Open or create a game first, then invite.');
+      return;
+    }
+    if (partnerEmail === normalizeEmail(user.email)) {
+      setStatus('Partner email cannot be your own email.');
+      return;
+    }
+
+    try {
+      invitePartnerBtn.disabled = true;
+      setStatus('Sending invite...');
+      await db.ref(`games/${gameId}`).update({
+        partnerInvite: {
+          targetEmail: partnerEmail,
+          senderUid: user.uid,
+          senderEmail: normalizeEmail(user.email),
+          senderName,
+          createdAt: Date.now(),
+          status: 'pending',
+          gameId
+        },
+        updatedAt: Date.now()
+      });
+      setStatus('Partner invited successfully.', true);
+    } catch (err) {
+      setStatus(err?.message || 'Could not send partner invite.');
+    } finally {
+      invitePartnerBtn.disabled = !getPartnerEmailForInvite();
     }
   });
 

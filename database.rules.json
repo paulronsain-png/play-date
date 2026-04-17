@@ -3,6 +3,9 @@
     ".read": false,
     ".write": false,
     "games": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["partnerInvite/targetEmail"],
       "$gameId": {
         ".read": "auth != null",
         ".write": "auth != null"

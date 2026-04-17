@@ -1,7 +1,22 @@
 {
   "permissions": {
     "allow": [
-      "Bash(firebase deploy:*)"
+      "Bash(firebase deploy:*)",
+      "Bash(curl -sI \"https://cdn.jsdelivr.net/npm/stockfish@10.0.2/stockfish.js\")",
+      "Bash(curl -sL \"https://registry.npmjs.org/stockfish/10.0.2\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(list\\(d.get\\('dist',{}\\).items\\(\\)\\)\\)\")",
+      "Bash(curl -sL \"https://registry.npmjs.org/stockfish/-/stockfish-10.0.2.tgz\")",
+      "Bash(tar -xzO package/stockfish.js)",
+      "Bash(tar -tzf -)",
+      "Bash(tar -xzO package/src/stockfish.js)",
+      "Bash(python3 -)",
+      "Bash(open https://playdate-94b08.web.app)",
+      "Bash(sed -i '' 's/style\\\\.css?v=163/style.css?v=164/' index.html)",
+      "Bash(sed -i '' 's/main\\\\.js?v=41/main.js?v=42/' index.html)",
+      "Bash(sed -i '' 's/game\\\\.js?v=30/game.js?v=31/' index.html)",
+      "Bash(gh auth *)",
+      "Bash(git commit *)",
+      "Bash(git push *)"
     ]
   }
 }

@@ -189,11 +189,133 @@
     const joinInput = byId('join-link-input');
     const joinBtn = byId('join-game-btn');
     const logoutBtn = byId('auth-logout-btn');
+    const partnerInviteOverlay = byId('partner-invite-overlay');
+    const partnerInviteMsg = byId('partner-invite-msg');
+    const partnerInviteJoinBtn = byId('partner-invite-join-btn');
+    const partnerInviteIgnoreBtn = byId('partner-invite-ignore-btn');
+    let activePartnerInvite = null;
+    let partnerInviteQueryRef = null;
+    let partnerInviteListener = null;
 
     function showMessage(text, ok = false) {
       if (!authMessage) return;
       authMessage.textContent = text || '';
       authMessage.classList.toggle('ok', !!ok);
+    }
+
+    function closePartnerInviteModal() {
+      activePartnerInvite = null;
+      partnerInviteOverlay?.classList.add('hidden');
+    }
+
+    async function setPartnerInviteStatus(invite, status) {
+      if (!db || !invite?.gameId) return;
+      try {
+        await db.ref(`games/${invite.gameId}/partnerInvite`).update({
+          status,
+          respondedAt: Date.now(),
+          respondedBy: auth?.currentUser?.uid || null
+        });
+      } catch (_) {}
+    }
+
+    function showPartnerInviteModal(invite) {
+      if (!invite || !partnerInviteOverlay || !partnerInviteMsg) return;
+      activePartnerInvite = invite;
+      const sender = String(invite.senderName || invite.senderEmail || 'Your partner').trim();
+      partnerInviteMsg.textContent = `${sender} invited you to a game.`;
+      partnerInviteOverlay.classList.remove('hidden');
+    }
+
+    async function findLatestPartnerInvite(targetEmail, myUid) {
+      if (!db || !targetEmail) return null;
+      try {
+        const snap = await db
+          .ref('games')
+          .orderByChild('partnerInvite/targetEmail')
+          .equalTo(targetEmail)
+          .limitToLast(20)
+          .once('value');
+        const all = snap.val() || {};
+        const candidates = [];
+        Object.keys(all).forEach((gameId) => {
+          const entry = all[gameId]?.partnerInvite || null;
+          if (!entry) return;
+          if (String(entry.status || '') !== 'pending') return;
+          if (normalizeEmail(entry.targetEmail) !== targetEmail) return;
+          if (entry.senderUid && entry.senderUid === myUid) return;
+          candidates.push({
+            gameId,
+            senderUid: entry.senderUid || '',
+            senderEmail: entry.senderEmail || '',
+            senderName: entry.senderName || '',
+            createdAt: Number(entry.createdAt || 0)
+          });
+        });
+        candidates.sort((a, b) => b.createdAt - a.createdAt);
+        return candidates[0] || null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    async function maybeShowPartnerInvite(user) {
+      if (!user) return;
+      const targetEmail = normalizeEmail(user.email);
+      if (!targetEmail) return;
+      const invite = await findLatestPartnerInvite(targetEmail, user.uid);
+      if (!invite) return;
+      showPartnerInviteModal(invite);
+    }
+
+    function stopPartnerInviteListener() {
+      if (partnerInviteQueryRef && partnerInviteListener) {
+        partnerInviteQueryRef.off('value', partnerInviteListener);
+      }
+      partnerInviteQueryRef = null;
+      partnerInviteListener = null;
+    }
+
+    function startPartnerInviteListener(user) {
+      stopPartnerInviteListener();
+      if (!db || !user) return;
+      const targetEmail = normalizeEmail(user.email);
+      if (!targetEmail) return;
+
+      partnerInviteQueryRef = db
+        .ref('games')
+        .orderByChild('partnerInvite/targetEmail')
+        .equalTo(targetEmail)
+        .limitToLast(20);
+
+      partnerInviteListener = (snap) => {
+        if (!snap) return;
+        const all = snap.val() || {};
+        const candidates = [];
+        Object.keys(all).forEach((gameId) => {
+          const entry = all[gameId]?.partnerInvite || null;
+          if (!entry) return;
+          if (String(entry.status || '') !== 'pending') return;
+          if (normalizeEmail(entry.targetEmail) !== targetEmail) return;
+          if (entry.senderUid && entry.senderUid === user.uid) return;
+          candidates.push({
+            gameId,
+            senderUid: entry.senderUid || '',
+            senderEmail: entry.senderEmail || '',
+            senderName: entry.senderName || '',
+            createdAt: Number(entry.createdAt || 0)
+          });
+        });
+        candidates.sort((a, b) => b.createdAt - a.createdAt);
+        const invite = candidates[0] || null;
+        if (!invite) return;
+        if (activePartnerInvite && activePartnerInvite.gameId === invite.gameId && activePartnerInvite.createdAt === invite.createdAt) {
+          return;
+        }
+        showPartnerInviteModal(invite);
+      };
+
+      partnerInviteQueryRef.on('value', partnerInviteListener);
     }
 
     function friendlyAuthError(err) {
@@ -534,11 +656,29 @@
 
     logoutBtn?.addEventListener('click', async () => {
       try {
+        stopPartnerInviteListener();
+        closePartnerInviteModal();
         await auth?.signOut();
         showMessage('Signed out.', true);
       } catch (err) {
         showMessage(err?.message || 'Could not log out.');
       }
+    });
+
+    partnerInviteIgnoreBtn?.addEventListener('click', async () => {
+      const invite = activePartnerInvite;
+      closePartnerInviteModal();
+      if (!invite) return;
+      await setPartnerInviteStatus(invite, 'ignored');
+    });
+
+    partnerInviteJoinBtn?.addEventListener('click', async () => {
+      const invite = activePartnerInvite;
+      closePartnerInviteModal();
+      if (!invite?.gameId) return;
+      await setPartnerInviteStatus(invite, 'accepted');
+      window.GAME_ID = invite.gameId;
+      window.location.href = buildGameUrl(invite.gameId);
     });
 
     if (!auth) {
@@ -555,6 +695,8 @@
       if (!user) {
         window.currentProfile = null;
         notifyProfileUpdated();
+        stopPartnerInviteListener();
+        closePartnerInviteModal();
         showAuth();
         return;
       }
@@ -594,6 +736,9 @@
       profile.reunionAt = parseReunionAt(profile.reunionAt) || null;
       window.currentProfile = profile;
       notifyProfileUpdated();
+
+      maybeShowPartnerInvite(user);
+      startPartnerInviteListener(user);
 
       if (!window.GAME_ID) {
         showLobby(user);

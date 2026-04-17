@@ -726,9 +726,6 @@ function startSeatsIdentityWatcher() {
     if (typeof window.setMultiplayerIdentity === 'function') {
       window.setMultiplayerIdentity(identity);
     }
-    if (typeof window.updateReunionFromSeats === 'function') {
-      window.updateReunionFromSeats(seats);
-    }
   });
 }
 
@@ -882,11 +879,17 @@ function listenToFirebase(stateRef, renderFn) {
     const isFirstLoad = lastAppliedUpdate === 0;
     if (isFirstLoad && data.yappingToastAt) window._lastYappingToast = data.yappingToastAt;
     if (isFirstLoad && data.loveAt) window._lastLoveAt = data.loveAt;
+    if (isFirstLoad && data.robotEvent) window.absorbRobotEvent?.(data.robotEvent);
 
     // Always check loveAt — it's written separately and doesn't update updatedAt
     if (!isFirstLoad && data.loveAt && data.loveAt > (window._lastLoveAt || 0)) {
       window._lastLoveAt = data.loveAt;
       if (typeof window.showLoveOverlay === 'function') window.showLoveOverlay();
+    }
+
+    // Robot events — synced separately, delivered to all clients
+    if (!isFirstLoad && data.robotEvent) {
+      window.onRobotEvent?.(data.robotEvent);
     }
 
     // Skip if we've already applied this version (our own write or a heartbeat)

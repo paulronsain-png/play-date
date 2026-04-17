@@ -11,18 +11,10 @@
   <meta name="apple-mobile-web-app-title" content="ChessTime" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=128" />
+  <link rel="stylesheet" href="style.css?v=167" />
 </head>
-<body class="dark-mode">
-  <div id="loading-screen">
-    <img src="icon.png" class="loading-logo">
-    <p id="loading-text"></p>
-    <div class="loading-bar-track">
-      <div class="loading-bar-fill" id="loading-bar"></div>
-    </div>
-  </div>
-
-  <div id="auth-gate" class="auth-gate hidden" aria-live="polite">
+<body class="library-mode">
+<div id="auth-gate" class="auth-gate hidden" aria-live="polite">
     <div class="auth-card">
       <div class="auth-logo-wrap">
         <img src="icon.png" alt="ChessTime logo" class="auth-logo">
@@ -103,6 +95,711 @@
 
   <div class="bg-texture"></div>
 
+  <!-- Library mode background scene -->
+  <div id="library-bg" aria-hidden="true">
+    <svg id="library-svg" viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <!-- Sky gradient: deep night blue -->
+        <linearGradient id="lib-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#050d1a"/>
+          <stop offset="100%" stop-color="#0d1e35"/>
+        </linearGradient>
+        <!-- Wall gradient: warm dark wood panelling -->
+        <linearGradient id="lib-wall" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#1a0e05"/>
+          <stop offset="55%"  stop-color="#1f1005"/>
+          <stop offset="100%" stop-color="#120900"/>
+        </linearGradient>
+        <!-- Floor: dark polished wood -->
+        <linearGradient id="lib-floor" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#2e1507"/>
+          <stop offset="100%" stop-color="#180a03"/>
+        </linearGradient>
+        <!-- Shelf wood -->
+        <linearGradient id="lib-shelf-wood" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%"   stop-color="#3a1a06"/>
+          <stop offset="40%"  stop-color="#5a2e0e"/>
+          <stop offset="100%" stop-color="#3a1a06"/>
+        </linearGradient>
+        <!-- Shelf plank -->
+        <linearGradient id="lib-plank" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#6b3a14"/>
+          <stop offset="100%" stop-color="#3d1e08"/>
+        </linearGradient>
+        <!-- Lamp warm glow -->
+        <radialGradient id="lib-lamp-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#ffcc66" stop-opacity="0.65"/>
+          <stop offset="40%"  stop-color="#ffaa33" stop-opacity="0.25"/>
+          <stop offset="80%"  stop-color="#ff8800" stop-opacity="0.08"/>
+          <stop offset="100%" stop-color="#ff8800" stop-opacity="0"/>
+        </radialGradient>
+        <!-- Desk surface light pool -->
+        <radialGradient id="lib-desk-pool" cx="50%" cy="0%" r="80%">
+          <stop offset="0%"   stop-color="#ffe0a0" stop-opacity="0.35"/>
+          <stop offset="60%"  stop-color="#ffcc66" stop-opacity="0.10"/>
+          <stop offset="100%" stop-color="#ffcc66" stop-opacity="0"/>
+        </radialGradient>
+        <!-- Window sky -->
+        <linearGradient id="lib-night-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#020812"/>
+          <stop offset="60%"  stop-color="#071428"/>
+          <stop offset="100%" stop-color="#0d1e35"/>
+        </linearGradient>
+        <!-- Moon glow -->
+        <radialGradient id="lib-moon-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#fff8c0" stop-opacity="0.5"/>
+          <stop offset="60%"  stop-color="#ffe880" stop-opacity="0.12"/>
+          <stop offset="100%" stop-color="#ffe880" stop-opacity="0"/>
+        </radialGradient>
+        <!-- Window inner room reflection -->
+        <linearGradient id="lib-win-reflect" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%"   stop-color="#3a1a06" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="#3a1a06" stop-opacity="0"/>
+        </linearGradient>
+        <!-- Desk wood -->
+        <linearGradient id="lib-desk-wood" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#7c4520"/>
+          <stop offset="50%"  stop-color="#5a3010"/>
+          <stop offset="100%" stop-color="#3a1e08"/>
+        </linearGradient>
+        <!-- Candle flicker -->
+        <radialGradient id="lib-candle-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#ffdd88" stop-opacity="0.8"/>
+          <stop offset="50%"  stop-color="#ff9922" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="#ff8800" stop-opacity="0"/>
+        </radialGradient>
+        <!-- Rug gradient -->
+        <radialGradient id="lib-rug" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#6b2020"/>
+          <stop offset="70%"  stop-color="#4a1515"/>
+          <stop offset="100%" stop-color="#2a0a0a"/>
+        </radialGradient>
+        <filter id="lib-soft-blur"><feGaussianBlur stdDeviation="3"/></filter>
+        <filter id="lib-glow-md"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="lib-glow-lg"><feGaussianBlur stdDeviation="18" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="lib-shadow"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.5"/></filter>
+        <filter id="lib-drop-blur"><feGaussianBlur stdDeviation="2.5"/></filter>
+        <clipPath id="lib-win-clip"><rect x="502" y="72" width="436" height="368" rx="4"/></clipPath>
+        <clipPath id="lib-win-left-clip"><rect x="502" y="72" width="210" height="368" rx="4"/></clipPath>
+        <clipPath id="lib-win-right-clip"><rect x="720" y="72" width="218" height="368" rx="4"/></clipPath>
+      </defs>
+
+      <!-- ══ BACKGROUND WALL ══ -->
+      <rect width="1440" height="900" fill="url(#lib-wall)"/>
+
+      <!-- Wood wainscoting lower third -->
+      <rect x="0" y="600" width="1440" height="300" fill="#140900"/>
+      <rect x="0" y="596" width="1440" height="8"   fill="#3d1e08"/>
+      <rect x="0" y="598" width="1440" height="3"   fill="#6b3a14" opacity="0.5"/>
+      <!-- Wainscoting panels -->
+      <rect x="240" y="612" width="200" height="180" rx="3" fill="none" stroke="#3d1e08" stroke-width="2" opacity="0.6"/>
+      <rect x="460" y="612" width="200" height="180" rx="3" fill="none" stroke="#3d1e08" stroke-width="2" opacity="0.6"/>
+      <rect x="680" y="612" width="200" height="180" rx="3" fill="none" stroke="#3d1e08" stroke-width="2" opacity="0.6"/>
+      <rect x="900" y="612" width="200" height="180" rx="3" fill="none" stroke="#3d1e08" stroke-width="2" opacity="0.6"/>
+
+      <!-- ══ FLOOR ══ -->
+      <rect x="0" y="800" width="1440" height="100" fill="url(#lib-floor)"/>
+      <!-- Floor grain lines -->
+      <line x1="0" y1="820" x2="1440" y2="820" stroke="#2a1005" stroke-width="1.5" opacity="0.5"/>
+      <line x1="0" y1="840" x2="1440" y2="840" stroke="#2a1005" stroke-width="1.5" opacity="0.5"/>
+      <line x1="0" y1="860" x2="1440" y2="860" stroke="#2a1005" stroke-width="1" opacity="0.4"/>
+      <line x1="0" y1="880" x2="1440" y2="880" stroke="#2a1005" stroke-width="1" opacity="0.3"/>
+      <!-- Floor board verticals -->
+      <line x1="180" y1="800" x2="200" y2="900" stroke="#2a1005" stroke-width="1" opacity="0.25"/>
+      <line x1="360" y1="800" x2="380" y2="900" stroke="#2a1005" stroke-width="1" opacity="0.25"/>
+      <line x1="540" y1="800" x2="560" y2="900" stroke="#2a1005" stroke-width="1" opacity="0.25"/>
+      <line x1="720" y1="800" x2="740" y2="900" stroke="#2a1005" stroke-width="1" opacity="0.25"/>
+      <line x1="900" y1="800" x2="920" y2="900" stroke="#2a1005" stroke-width="1" opacity="0.25"/>
+      <line x1="1080" y1="800" x2="1100" y2="900" stroke="#2a1005" stroke-width="1" opacity="0.25"/>
+      <line x1="1260" y1="800" x2="1280" y2="900" stroke="#2a1005" stroke-width="1" opacity="0.25"/>
+      <!-- Floor shine -->
+      <rect x="0" y="800" width="1440" height="4" fill="rgba(255,200,100,0.04)"/>
+
+      <!-- Ornamental rug -->
+      <ellipse cx="720" cy="840" rx="300" ry="50" fill="url(#lib-rug)" opacity="0.55"/>
+      <!-- Rug border pattern -->
+      <ellipse cx="720" cy="840" rx="290" ry="44" fill="none" stroke="#8b2020" stroke-width="3" opacity="0.5"/>
+      <ellipse cx="720" cy="840" rx="275" ry="38" fill="none" stroke="#c84040" stroke-width="1" opacity="0.3"/>
+
+      <!-- ══ LEFT BOOKSHELF ══ -->
+      <!-- Back panel -->
+      <rect x="0" y="0" width="255" height="900" fill="url(#lib-shelf-wood)"/>
+      <!-- Shelf planks with depth -->
+      <rect x="0" y="0"   width="255" height="14" fill="url(#lib-plank)"/>
+      <rect x="0" y="158" width="255" height="14" fill="url(#lib-plank)"/>
+      <rect x="0" y="318" width="255" height="14" fill="url(#lib-plank)"/>
+      <rect x="0" y="478" width="255" height="14" fill="url(#lib-plank)"/>
+      <rect x="0" y="640" width="255" height="14" fill="url(#lib-plank)"/>
+      <!-- Shelf undersides (darker) -->
+      <rect x="0" y="172" width="255" height="6" fill="rgba(0,0,0,0.35)"/>
+      <rect x="0" y="332" width="255" height="6" fill="rgba(0,0,0,0.35)"/>
+      <rect x="0" y="492" width="255" height="6" fill="rgba(0,0,0,0.35)"/>
+      <rect x="0" y="654" width="255" height="6" fill="rgba(0,0,0,0.35)"/>
+      <!-- Right edge shadow -->
+      <rect x="243" y="0" width="12" height="900" fill="rgba(0,0,0,0.45)"/>
+      <!-- Top cornice -->
+      <rect x="0" y="0" width="255" height="18" fill="#4a2508"/>
+      <rect x="0" y="14" width="255" height="4" fill="rgba(255,200,100,0.08)"/>
+
+      <!-- BOOKS LEFT ROW 1 (y=14 to y=158) -->
+      <rect x="5"   y="16"  width="20" height="142" rx="2" fill="#8b1a1a"/><rect x="5"   y="16" width="3" height="142" fill="rgba(255,255,255,0.07)"/>
+      <rect x="27"  y="24"  width="16" height="134" rx="2" fill="#c8921a"/><line x1="27" y1="70" x2="43" y2="70" stroke="rgba(0,0,0,0.2)" stroke-width="1"/>
+      <rect x="45"  y="14"  width="24" height="144" rx="2" fill="#1e4f8c"/><rect x="45" y="14" width="3" height="144" fill="rgba(255,255,255,0.06)"/>
+      <rect x="71"  y="28"  width="17" height="130" rx="2" fill="#2e7a30"/>
+      <rect x="90"  y="12"  width="22" height="146" rx="2" fill="#7a2a8c"/><rect x="90" y="12" width="3" height="146" fill="rgba(255,255,255,0.06)"/>
+      <rect x="114" y="26"  width="15" height="132" rx="2" fill="#8c6a18"/>
+      <rect x="131" y="17"  width="26" height="141" rx="2" fill="#8c2222"/><rect x="131" y="17" width="3" height="141" fill="rgba(255,255,255,0.07)"/>
+      <rect x="159" y="8"   width="19" height="150" rx="2" fill="#1a5e8c"/>
+      <rect x="180" y="22"  width="18" height="136" rx="2" fill="#3a7030"/>
+      <rect x="200" y="14"  width="23" height="144" rx="2" fill="#6c3618"/><rect x="200" y="14" width="3" height="144" fill="rgba(255,255,255,0.06)"/>
+      <rect x="225" y="30"  width="16" height="128" rx="2" fill="#4a1e7a"/>
+      <!-- Tiny gold title lines on some books -->
+      <line x1="46" y1="55" x2="68" y2="55" stroke="#c8a040" stroke-width="1" opacity="0.7"/>
+      <line x1="46" y1="60" x2="68" y2="60" stroke="#c8a040" stroke-width="1" opacity="0.5"/>
+      <line x1="91" y1="50" x2="111" y2="50" stroke="#c8a040" stroke-width="1" opacity="0.7"/>
+      <line x1="132" y1="62" x2="156" y2="62" stroke="#e8c060" stroke-width="1.5" opacity="0.6"/>
+
+      <!-- BOOKS LEFT ROW 2 (y=178 to y=318) -->
+      <rect x="8"   y="180" width="22" height="138" rx="2" fill="#2a5c1c"/>
+      <rect x="32"  y="190" width="17" height="128" rx="2" fill="#8c3820"/>
+      <rect x="51"  y="174" width="25" height="144" rx="2" fill="#3c2270"/><rect x="51" y="174" width="3" height="144" fill="rgba(255,255,255,0.06)"/>
+      <rect x="78"  y="184" width="18" height="134" rx="2" fill="#1a3e6c"/>
+      <rect x="98"  y="172" width="15" height="146" rx="2" fill="#7a5818"/>
+      <rect x="115" y="186" width="23" height="132" rx="2" fill="#6c1818"/>
+      <rect x="140" y="176" width="17" height="142" rx="2" fill="#206844"/>
+      <rect x="159" y="182" width="21" height="136" rx="2" fill="#582268"/>
+      <rect x="182" y="170" width="19" height="148" rx="2" fill="#3a4a1a"/>
+      <rect x="203" y="180" width="24" height="138" rx="2" fill="#6c3820"/>
+      <rect x="229" y="174" width="20" height="144" rx="2" fill="#1a4a6c"/>
+      <!-- Lying flat book on shelf 2 -->
+      <rect x="5" y="294" width="45" height="16" rx="2" fill="#c8a040" opacity="0.85"/>
+      <rect x="5" y="310" width="45" height="8"  rx="1" fill="#a07828" opacity="0.7"/>
+
+      <!-- BOOKS LEFT ROW 3 (y=338 to y=478) -->
+      <rect x="6"   y="340" width="19" height="138" rx="2" fill="#1a5840"/>
+      <rect x="27"  y="350" width="23" height="128" rx="2" fill="#7a2030"/>
+      <rect x="52"  y="334" width="17" height="144" rx="2" fill="#8c6a0e"/>
+      <rect x="71"  y="344" width="25" height="134" rx="2" fill="#1e307a"/>
+      <rect x="98"  y="332" width="21" height="146" rx="2" fill="#6a2068"/><rect x="98" y="332" width="3" height="146" fill="rgba(255,255,255,0.06)"/>
+      <rect x="121" y="346" width="15" height="132" rx="2" fill="#2a6a28"/>
+      <rect x="138" y="336" width="23" height="142" rx="2" fill="#8c4018"/>
+      <rect x="163" y="342" width="18" height="136" rx="2" fill="#1a386a"/>
+      <rect x="183" y="330" width="22" height="148" rx="2" fill="#6a5018"/>
+      <rect x="207" y="340" width="16" height="138" rx="2" fill="#4a1840"/>
+      <rect x="225" y="334" width="22" height="144" rx="2" fill="#205840"/>
+
+      <!-- BOOKS LEFT ROW 4 (y=498 to y=640) -->
+      <rect x="7"   y="500" width="21" height="140" rx="2" fill="#6a2818"/>
+      <rect x="30"  y="510" width="24" height="130" rx="2" fill="#1a6830"/>
+      <rect x="56"  y="494" width="18" height="146" rx="2" fill="#8c7812"/>
+      <rect x="76"  y="504" width="22" height="136" rx="2" fill="#282080"/>
+      <rect x="100" y="492" width="26" height="148" rx="2" fill="#581858"/><rect x="100" y="492" width="3" height="148" fill="rgba(255,255,255,0.06)"/>
+      <rect x="128" y="506" width="15" height="134" rx="2" fill="#206828"/>
+      <rect x="145" y="496" width="21" height="144" rx="2" fill="#8c3820"/>
+      <rect x="168" y="502" width="19" height="138" rx="2" fill="#1a4070"/>
+      <rect x="189" y="490" width="24" height="150" rx="2" fill="#5a4818"/>
+      <rect x="215" y="500" width="17" height="140" rx="2" fill="#3a1838"/>
+      <!-- Globe decorative on row 4 shelf -->
+      <circle cx="40" cy="660" r="14" fill="#1a3050" stroke="#3a5888" stroke-width="1.5"/>
+      <ellipse cx="40" cy="660" rx="14" ry="5" fill="none" stroke="#3a5888" stroke-width="0.8" opacity="0.5"/>
+      <line x1="40" y1="646" x2="40" y2="674" stroke="#3a5888" stroke-width="0.8" opacity="0.5"/>
+      <ellipse cx="40" cy="660" rx="5" ry="14" fill="none" stroke="#2a6888" stroke-width="0.8" opacity="0.4"/>
+      <!-- Small clock -->
+      <rect x="70" y="648" width="22" height="26" rx="4" fill="#8c6020"/>
+      <circle cx="81" cy="659" r="8" fill="#c8b060" stroke="#6a4010" stroke-width="1"/>
+      <line x1="81" y1="659" x2="81" y2="654" stroke="#3a2008" stroke-width="1.5"/>
+      <line x1="81" y1="659" x2="85" y2="661" stroke="#3a2008" stroke-width="1.2"/>
+      <!-- Inkwell & quill -->
+      <ellipse cx="130" cy="668" rx="10" ry="8" fill="#1a1a1a"/>
+      <ellipse cx="130" cy="660" rx="8" ry="5" fill="#2a2a2a"/>
+      <path d="M138,640 Q148,620 155,610" stroke="#d4c890" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M138,640 Q133,638 130,645" fill="#d4c890" stroke="none"/>
+
+      <!-- BOOKS LEFT ROW 5 (y=654 to y=900) -->
+      <rect x="10"  y="658" width="18" height="142" rx="2" fill="#4a1010"/> <!-- handled by globe area above -->
+      <rect x="170" y="658" width="23" height="142" rx="2" fill="#3a5a18"/>
+      <rect x="195" y="660" width="17" height="140" rx="2" fill="#8c2a18"/>
+      <rect x="214" y="655" width="24" height="145" rx="2" fill="#1a3a6a"/>
+
+      <!-- ══ RIGHT BOOKSHELF ══ -->
+      <rect x="1185" y="0" width="255" height="900" fill="url(#lib-shelf-wood)"/>
+      <rect x="1185" y="0"   width="255" height="14" fill="url(#lib-plank)"/>
+      <rect x="1185" y="158" width="255" height="14" fill="url(#lib-plank)"/>
+      <rect x="1185" y="318" width="255" height="14" fill="url(#lib-plank)"/>
+      <rect x="1185" y="478" width="255" height="14" fill="url(#lib-plank)"/>
+      <rect x="1185" y="640" width="255" height="14" fill="url(#lib-plank)"/>
+      <rect x="1185" y="172" width="255" height="6" fill="rgba(0,0,0,0.35)"/>
+      <rect x="1185" y="332" width="255" height="6" fill="rgba(0,0,0,0.35)"/>
+      <rect x="1185" y="492" width="255" height="6" fill="rgba(0,0,0,0.35)"/>
+      <rect x="1185" y="654" width="255" height="6" fill="rgba(0,0,0,0.35)"/>
+      <rect x="1185" y="0" width="12" height="900" fill="rgba(0,0,0,0.45)"/>
+      <rect x="1185" y="0" width="255" height="18" fill="#4a2508"/>
+      <rect x="1185" y="14" width="255" height="4" fill="rgba(255,200,100,0.08)"/>
+
+      <!-- BOOKS RIGHT ROW 1 -->
+      <rect x="1190" y="18"  width="22" height="140" rx="2" fill="#8c5018"/>
+      <rect x="1214" y="28"  width="16" height="130" rx="2" fill="#302080"/>
+      <rect x="1232" y="12"  width="21" height="146" rx="2" fill="#6c2020"/>
+      <rect x="1255" y="24"  width="19" height="134" rx="2" fill="#1a6848"/>
+      <rect x="1276" y="8"   width="25" height="150" rx="2" fill="#486c1a"/>
+      <rect x="1303" y="20"  width="17" height="138" rx="2" fill="#8c1848"/>
+      <rect x="1322" y="15"  width="23" height="143" rx="2" fill="#1a2e8c"/>
+      <rect x="1347" y="30"  width="19" height="128" rx="2" fill="#6c481a"/>
+      <rect x="1368" y="10"  width="15" height="148" rx="2" fill="#286c28"/>
+      <rect x="1385" y="22"  width="24" height="136" rx="2" fill="#522258"/>
+      <rect x="1411" y="16"  width="22" height="142" rx="2" fill="#1a486c"/>
+      <line x1="1233" y1="58" x2="1252" y2="58" stroke="#c8a040" stroke-width="1.5" opacity="0.6"/>
+      <line x1="1277" y1="52" x2="1300" y2="52" stroke="#e8c060" stroke-width="1" opacity="0.7"/>
+
+      <!-- BOOKS RIGHT ROW 2 -->
+      <rect x="1188" y="176" width="20" height="142" rx="2" fill="#1a5a8c"/>
+      <rect x="1210" y="186" width="18" height="132" rx="2" fill="#8c4022"/>
+      <rect x="1230" y="170" width="23" height="148" rx="2" fill="#487c28"/>
+      <rect x="1255" y="180" width="17" height="138" rx="2" fill="#682a60"/>
+      <rect x="1274" y="168" width="25" height="150" rx="2" fill="#1e2c70"/>
+      <rect x="1301" y="178" width="19" height="140" rx="2" fill="#8c6818"/>
+      <rect x="1322" y="172" width="15" height="146" rx="2" fill="#5a1818"/>
+      <rect x="1339" y="184" width="22" height="134" rx="2" fill="#1a5838"/>
+      <rect x="1363" y="174" width="18" height="144" rx="2" fill="#5a2260"/>
+      <rect x="1383" y="170" width="24" height="148" rx="2" fill="#3a5018"/>
+      <rect x="1409" y="178" width="21" height="140" rx="2" fill="#6c3820"/>
+
+      <!-- BOOKS RIGHT ROW 3 -->
+      <rect x="1192" y="338" width="21" height="140" rx="2" fill="#781a10"/>
+      <rect x="1215" y="348" width="23" height="130" rx="2" fill="#1a38a0"/>
+      <rect x="1240" y="332" width="17" height="146" rx="2" fill="#587818"/>
+      <rect x="1259" y="342" width="21" height="136" rx="2" fill="#8c2858"/>
+      <rect x="1282" y="330" width="25" height="148" rx="2" fill="#1a5a68"/>
+      <rect x="1309" y="340" width="19" height="138" rx="2" fill="#6c4818"/>
+      <rect x="1330" y="334" width="16" height="144" rx="2" fill="#342278"/>
+      <rect x="1348" y="344" width="23" height="134" rx="2" fill="#487820"/>
+      <rect x="1373" y="336" width="18" height="142" rx="2" fill="#8c3830"/>
+      <rect x="1393" y="330" width="22" height="148" rx="2" fill="#1a4480"/>
+      <rect x="1417" y="340" width="20" height="138" rx="2" fill="#6a5818"/>
+
+      <!-- BOOKS RIGHT ROW 4 -->
+      <rect x="1190" y="498" width="18" height="142" rx="2" fill="#501a50"/>
+      <rect x="1210" y="508" width="22" height="132" rx="2" fill="#1a6840"/>
+      <rect x="1234" y="492" width="20" height="148" rx="2" fill="#8c5818"/>
+      <rect x="1256" y="502" width="24" height="138" rx="2" fill="#1a2880"/>
+      <rect x="1282" y="490" width="18" height="150" rx="2" fill="#682020"/>
+      <rect x="1302" y="500" width="23" height="140" rx="2" fill="#287840"/>
+      <rect x="1327" y="494" width="17" height="146" rx="2" fill="#7c4218"/>
+      <rect x="1346" y="504" width="21" height="136" rx="2" fill="#3a1878"/>
+      <rect x="1369" y="496" width="25" height="144" rx="2" fill="#1a5848"/>
+      <rect x="1396" y="500" width="19" height="140" rx="2" fill="#6a6018"/>
+      <rect x="1417" y="492" width="22" height="148" rx="2" fill="#4a1a48"/>
+      <!-- Right shelf decorations -->
+      <rect x="1192" y="652" width="50" height="14" rx="2" fill="#c8a040" opacity="0.8"/> <!-- lying book -->
+      <rect x="1192" y="666" width="50" height="8"  rx="1" fill="#a07828" opacity="0.7"/>
+      <!-- Small vase -->
+      <path d="M1260,654 Q1255,660 1254,675 L1278,675 Q1277,660 1272,654 Z" fill="#3a6a8c"/>
+      <ellipse cx="1266" cy="654" rx="12" ry="4" fill="#4a7a9c"/>
+      <!-- Flower in vase -->
+      <line x1="1266" y1="654" x2="1264" y2="630" stroke="#3a6a20" stroke-width="2"/>
+      <circle cx="1264" cy="628" r="5" fill="#d84060" opacity="0.9"/>
+      <circle cx="1259" cy="632" r="3" fill="#c83050" opacity="0.7"/>
+      <circle cx="1269" cy="631" r="3" fill="#e05070" opacity="0.7"/>
+      <!-- Hourglass -->
+      <path d="M1310,648 L1330,648 L1320,668 L1330,688 L1310,688 L1320,668 Z" fill="#c8b060" opacity="0.75"/>
+      <ellipse cx="1320" cy="648" rx="12" ry="3" fill="#8c7830" opacity="0.8"/>
+      <ellipse cx="1320" cy="688" rx="12" ry="3" fill="#8c7830" opacity="0.8"/>
+
+      <!-- ══ NIGHT WINDOW ══ -->
+      <!-- Window reveal depth -->
+      <rect x="488" y="58" width="464" height="396" rx="6" fill="#2a1506"/>
+      <!-- Sky inside window -->
+      <rect x="502" y="72" width="436" height="368" rx="2" fill="url(#lib-night-sky)" clip-path="url(#lib-win-clip)"/>
+
+      <!-- Stars -->
+      <g clip-path="url(#lib-win-clip)">
+        <g class="lib-stars">
+          <circle cx="520"  cy="96"  r="1.2" fill="#fff" opacity="0.85"/>
+          <circle cx="545"  cy="78"  r="0.8" fill="#fff" opacity="0.65"/>
+          <circle cx="568"  cy="118" r="1.6" fill="#fff" opacity="0.9"/>
+          <circle cx="595"  cy="88"  r="0.9" fill="#fff" opacity="0.75"/>
+          <circle cx="618"  cy="105" r="1.3" fill="#fff" opacity="0.8"/>
+          <circle cx="645"  cy="75"  r="0.7" fill="#fff" opacity="0.55"/>
+          <circle cx="668"  cy="130" r="1.5" fill="#fff" opacity="0.7"/>
+          <circle cx="695"  cy="92"  r="1.0" fill="#fff" opacity="0.85"/>
+          <circle cx="530"  cy="148" r="0.8" fill="#fff" opacity="0.6"/>
+          <circle cx="558"  cy="168" r="1.4" fill="#fff" opacity="0.75"/>
+          <circle cx="580"  cy="140" r="1.0" fill="#fff" opacity="0.8"/>
+          <circle cx="610"  cy="180" r="0.7" fill="#fff" opacity="0.5"/>
+          <circle cx="635"  cy="155" r="1.2" fill="#fff" opacity="0.7"/>
+          <circle cx="660"  cy="172" r="0.9" fill="#fff" opacity="0.65"/>
+          <circle cx="688"  cy="142" r="1.5" fill="#fff" opacity="0.8"/>
+          <circle cx="710"  cy="168" r="1.0" fill="#fff" opacity="0.6"/>
+          <circle cx="728"  cy="96"  r="1.2" fill="#fff" opacity="0.85"/>
+          <circle cx="750"  cy="118" r="0.8" fill="#fff" opacity="0.7"/>
+          <circle cx="770"  cy="88"  r="1.4" fill="#fff" opacity="0.9"/>
+          <circle cx="795"  cy="130" r="1.0" fill="#fff" opacity="0.75"/>
+          <circle cx="818"  cy="105" r="0.7" fill="#fff" opacity="0.6"/>
+          <circle cx="840"  cy="82"  r="1.3" fill="#fff" opacity="0.8"/>
+          <circle cx="862"  cy="148" r="1.6" fill="#fff" opacity="0.7"/>
+          <circle cx="885"  cy="118" r="1.0" fill="#fff" opacity="0.85"/>
+          <circle cx="908"  cy="96"  r="0.8" fill="#fff" opacity="0.65"/>
+        </g>
+        <!-- Moon glow haze -->
+        <ellipse cx="820" cy="165" rx="80" ry="70" fill="url(#lib-moon-glow)" filter="url(#lib-soft-blur)"/>
+        <!-- Moon -->
+        <circle cx="820" cy="158" r="42" fill="#ece8b8" filter="url(#lib-glow-md)"/>
+        <circle cx="820" cy="158" r="40" fill="#f0ecc0"/>
+        <!-- Moon craters -->
+        <circle cx="808" cy="150" r="6"  fill="#d8d4a0" opacity="0.6"/>
+        <circle cx="832" cy="168" r="4"  fill="#d8d4a0" opacity="0.5"/>
+        <circle cx="820" cy="145" r="3"  fill="#d8d4a0" opacity="0.4"/>
+        <circle cx="800" cy="165" r="2.5" fill="#d8d4a0" opacity="0.4"/>
+        <!-- Moon inner glow -->
+        <ellipse cx="810" cy="148" rx="18" ry="14" fill="rgba(255,255,230,0.3)"/>
+
+        <!-- Rain streaks — animated -->
+        <g class="lib-rain" opacity="0.72" stroke="#b8d8f0" stroke-linecap="round">
+          <line x1="508" y1="86" x2="493" y2="142" stroke-width="1.4" opacity="0.26"/>
+          <line x1="522" y1="89" x2="505" y2="150" stroke-width="1.7" opacity="0.25"/>
+          <line x1="536" y1="83" x2="514" y2="165" stroke-width="1.3" opacity="0.15"/>
+          <line x1="550" y1="101" x2="526" y2="188" stroke-width="1.6" opacity="0.24"/>
+          <line x1="564" y1="125" x2="545" y2="194" stroke-width="1.4" opacity="0.22"/>
+          <line x1="578" y1="72" x2="560" y2="137" stroke-width="1.5" opacity="0.25"/>
+          <line x1="592" y1="91" x2="573" y2="159" stroke-width="1.5" opacity="0.29"/>
+          <line x1="606" y1="83" x2="584" y2="162" stroke-width="1.7" opacity="0.16"/>
+          <line x1="620" y1="105" x2="605" y2="162" stroke-width="1.6" opacity="0.26"/>
+          <line x1="634" y1="120" x2="618" y2="180" stroke-width="1.7" opacity="0.23"/>
+          <line x1="648" y1="118" x2="630" y2="185" stroke-width="1.3" opacity="0.26"/>
+          <line x1="662" y1="101" x2="642" y2="174" stroke-width="1.7" opacity="0.30"/>
+          <line x1="676" y1="84" x2="654" y2="163" stroke-width="1.6" opacity="0.19"/>
+          <line x1="690" y1="118" x2="672" y2="183" stroke-width="1.4" opacity="0.21"/>
+          <line x1="704" y1="106" x2="688" y2="165" stroke-width="1.4" opacity="0.24"/>
+          <line x1="718" y1="103" x2="700" y2="168" stroke-width="1.4" opacity="0.22"/>
+          <line x1="732" y1="100" x2="711" y2="175" stroke-width="1.7" opacity="0.28"/>
+          <line x1="746" y1="101" x2="731" y2="158" stroke-width="1.5" opacity="0.27"/>
+          <line x1="760" y1="80" x2="741" y2="148" stroke-width="1.6" opacity="0.29"/>
+          <line x1="774" y1="112" x2="755" y2="180" stroke-width="1.5" opacity="0.25"/>
+          <line x1="788" y1="130" x2="771" y2="194" stroke-width="1.4" opacity="0.19"/>
+          <line x1="802" y1="140" x2="783" y2="211" stroke-width="1.5" opacity="0.26"/>
+          <line x1="816" y1="123" x2="795" y2="201" stroke-width="1.8" opacity="0.18"/>
+          <line x1="830" y1="137" x2="806" y2="223" stroke-width="1.3" opacity="0.16"/>
+          <line x1="844" y1="86" x2="827" y2="150" stroke-width="1.7" opacity="0.24"/>
+          <line x1="858" y1="126" x2="842" y2="185" stroke-width="1.6" opacity="0.21"/>
+          <line x1="872" y1="131" x2="848" y2="219" stroke-width="1.6" opacity="0.19"/>
+          <line x1="886" y1="73" x2="869" y2="135" stroke-width="1.6" opacity="0.25"/>
+          <line x1="900" y1="106" x2="879" y2="182" stroke-width="1.5" opacity="0.17"/>
+          <line x1="914" y1="130" x2="899" y2="185" stroke-width="1.7" opacity="0.29"/>
+          <line x1="928" y1="105" x2="904" y2="192" stroke-width="1.6" opacity="0.26"/>
+
+          <line x1="508" y1="213" x2="488" y2="287" stroke-width="1.6" opacity="0.23"/>
+          <line x1="522" y1="225" x2="505" y2="289" stroke-width="1.4" opacity="0.17"/>
+          <line x1="536" y1="267" x2="521" y2="322" stroke-width="1.5" opacity="0.20"/>
+          <line x1="550" y1="214" x2="529" y2="292" stroke-width="1.7" opacity="0.23"/>
+          <line x1="564" y1="239" x2="545" y2="309" stroke-width="1.7" opacity="0.13"/>
+          <line x1="578" y1="210" x2="562" y2="270" stroke-width="1.7" opacity="0.22"/>
+          <line x1="592" y1="268" x2="575" y2="331" stroke-width="1.5" opacity="0.14"/>
+          <line x1="606" y1="270" x2="588" y2="335" stroke-width="1.7" opacity="0.15"/>
+          <line x1="620" y1="254" x2="601" y2="322" stroke-width="1.7" opacity="0.24"/>
+          <line x1="634" y1="225" x2="614" y2="299" stroke-width="1.6" opacity="0.17"/>
+          <line x1="648" y1="247" x2="625" y2="330" stroke-width="1.5" opacity="0.24"/>
+          <line x1="662" y1="231" x2="643" y2="300" stroke-width="1.3" opacity="0.13"/>
+          <line x1="676" y1="270" x2="657" y2="339" stroke-width="1.3" opacity="0.20"/>
+          <line x1="690" y1="207" x2="671" y2="276" stroke-width="1.3" opacity="0.13"/>
+          <line x1="704" y1="242" x2="688" y2="301" stroke-width="1.4" opacity="0.19"/>
+          <line x1="718" y1="262" x2="699" y2="330" stroke-width="1.7" opacity="0.19"/>
+          <line x1="732" y1="260" x2="713" y2="330" stroke-width="1.7" opacity="0.22"/>
+          <line x1="746" y1="224" x2="729" y2="285" stroke-width="1.5" opacity="0.13"/>
+          <line x1="760" y1="254" x2="738" y2="335" stroke-width="1.7" opacity="0.18"/>
+          <line x1="774" y1="212" x2="758" y2="270" stroke-width="1.5" opacity="0.17"/>
+          <line x1="788" y1="213" x2="769" y2="283" stroke-width="1.6" opacity="0.14"/>
+          <line x1="802" y1="217" x2="780" y2="299" stroke-width="1.5" opacity="0.14"/>
+          <line x1="816" y1="209" x2="793" y2="292" stroke-width="1.7" opacity="0.23"/>
+          <line x1="830" y1="212" x2="814" y2="270" stroke-width="1.6" opacity="0.20"/>
+          <line x1="844" y1="201" x2="828" y2="261" stroke-width="1.7" opacity="0.24"/>
+          <line x1="858" y1="221" x2="836" y2="302" stroke-width="1.4" opacity="0.18"/>
+          <line x1="872" y1="251" x2="856" y2="309" stroke-width="1.3" opacity="0.14"/>
+          <line x1="886" y1="249" x2="867" y2="320" stroke-width="1.7" opacity="0.24"/>
+          <line x1="900" y1="236" x2="878" y2="318" stroke-width="1.7" opacity="0.21"/>
+          <line x1="914" y1="262" x2="897" y2="326" stroke-width="1.4" opacity="0.14"/>
+          <line x1="928" y1="207" x2="904" y2="296" stroke-width="1.5" opacity="0.13"/>
+        </g>
+
+                <!-- Window sill plants (inside clip) -->
+        <!-- Left plant pot -->
+        <rect x="502" y="408" width="35" height="32" rx="3" fill="#2a1506"/>
+        <ellipse cx="519" cy="408" rx="17" ry="6" fill="#3a2008"/>
+        <path d="M519,408 Q504,370 496,348" stroke="#2a5820" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <ellipse cx="494" cy="345" rx="14" ry="9" fill="#2a7020" transform="rotate(-25 494 345)"/>
+        <path d="M519,402 Q532,375 538,356" stroke="#2a5820" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <ellipse cx="540" cy="353" rx="13" ry="8" fill="#357828" transform="rotate(18 540 353)"/>
+        <path d="M519,408 Q519,385 519,360" stroke="#357828" stroke-width="3" fill="none"/>
+        <ellipse cx="519" cy="357" rx="12" ry="8" fill="#2a7020"/>
+
+        <!-- Right plant pot -->
+        <rect x="903" y="408" width="35" height="32" rx="3" fill="#2a1506"/>
+        <ellipse cx="920" cy="408" rx="17" ry="6" fill="#3a2008"/>
+        <path d="M920,408 Q935,372 942,350" stroke="#2a5820" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <ellipse cx="944" cy="347" rx="14" ry="9" fill="#2a7020" transform="rotate(20 944 347)"/>
+        <path d="M920,402 Q907,378 902,358" stroke="#357828" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <ellipse cx="900" cy="355" rx="13" ry="8" fill="#357828" transform="rotate(-22 900 355)"/>
+        <path d="M920,408 Q920,384 920,360" stroke="#2a5820" stroke-width="3" fill="none"/>
+        <ellipse cx="920" cy="357" rx="11" ry="8" fill="#2a7020"/>
+      </g>
+
+      <!-- Window frame (drawn on top of glass) -->
+      <!-- Outer frame -->
+      <rect x="488" y="58" width="464" height="396" rx="6" fill="none" stroke="#3a1e08" stroke-width="18"/>
+      <!-- Inner frame highlight -->
+      <rect x="488" y="58" width="464" height="396" rx="6" fill="none" stroke="#5a3010" stroke-width="2" opacity="0.5"/>
+      <!-- Horizontal cross-bar -->
+      <rect x="488" y="248" width="464" height="16" fill="#3a1e08"/>
+      <rect x="488" y="248" width="464" height="3"  fill="#5a3010" opacity="0.5"/>
+      <!-- Vertical cross-bar -->
+      <rect x="712" y="58" width="16" height="396" fill="#3a1e08"/>
+      <rect x="712" y="58" width="3"  height="396" fill="#5a3010" opacity="0.5"/>
+      <!-- Window sill -->
+      <rect x="480" y="450" width="480" height="22" rx="3" fill="#4a2808"/>
+      <rect x="480" y="450" width="480" height="5"  rx="2" fill="#6a3a10" opacity="0.6"/>
+      <!-- Interior window light spill on wall -->
+      <rect x="488" y="58" width="464" height="396" fill="url(#lib-win-reflect)"/>
+
+      <!-- ══ STUDY DESK ══ -->
+      <!-- Desk surface -->
+      <rect x="900" y="680" width="540" height="130" rx="4" fill="url(#lib-desk-wood)" filter="url(#lib-shadow)"/>
+      <!-- Desk top edge highlight -->
+      <rect x="900" y="680" width="540" height="7" rx="3" fill="#8c5220" opacity="0.7"/>
+      <!-- Desk front panel -->
+      <rect x="905" y="787" width="530" height="23" rx="2" fill="#3a1e08"/>
+      <!-- Desk legs -->
+      <rect x="920"  y="810" width="24" height="90" rx="3" fill="#3a1e08"/>
+      <rect x="1400" y="810" width="24" height="90" rx="3" fill="#3a1e08"/>
+      <!-- Subtle wood grain on desk surface -->
+      <line x1="900" y1="710" x2="1440" y2="715" stroke="rgba(0,0,0,0.1)" stroke-width="2"/>
+      <line x1="900" y1="740" x2="1440" y2="745" stroke="rgba(0,0,0,0.08)" stroke-width="1.5"/>
+      <line x1="900" y1="768" x2="1440" y2="773" stroke="rgba(0,0,0,0.06)" stroke-width="1"/>
+
+      <!-- ══ DESK LAMP ══ -->
+      <!-- Lamp base weighted & chunky -->
+      <ellipse cx="1350" cy="683" rx="40" ry="9"  fill="#1a1a1a"/>
+      <rect    x="1335" y="660" width="30" height="23" rx="4" fill="#1a1a1a"/>
+      <!-- Lamp arm articulated -->
+      <line x1="1350" y1="660" x2="1320" y2="580" stroke="#c8a050" stroke-width="10" stroke-linecap="round"/>
+      <circle cx="1320" cy="580" r="7" fill="#b89040"/> <!-- joint -->
+      <line x1="1320" y1="580" x2="1280" y2="540" stroke="#c8a050" stroke-width="10" stroke-linecap="round"/>
+      <!-- Lamp shade (cone) -->
+      <path d="M1240,540 Q1248,512 1288,514 Q1328,516 1322,542 Z" fill="#d4a830"/>
+      <path d="M1244,540 Q1248,536 1318,540" fill="none" stroke="#b89028" stroke-width="2.5"/>
+      <!-- Shade inner glow -->
+      <path d="M1248,540 Q1260,526 1296,528 Q1316,530 1318,540 Z" fill="#ffe060" opacity="0.3"/>
+      <!-- Lamp bulb -->
+      <circle cx="1283" cy="540" r="6" fill="#fffaaa" filter="url(#lib-glow-md)"/>
+      <!-- Lamp light cone on wall/desk -->
+      <ellipse cx="1283" cy="680" rx="150" ry="120" fill="url(#lib-lamp-glow)" class="lib-lamp-flicker"/>
+      <!-- Lamp pool on desk surface -->
+      <ellipse cx="1250" cy="685" rx="110" ry="30" fill="url(#lib-desk-pool)" opacity="0.9" class="lib-lamp-flicker"/>
+
+      <!-- ══ DESK OBJECTS ══ -->
+      <!-- Stack of books on desk left -->
+      <rect x="910" y="638" width="18" height="44" rx="1" fill="#8c2020"/>
+      <rect x="910" y="638" width="2"  height="44" fill="rgba(255,255,255,0.08)"/>
+      <line x1="910" y1="655" x2="928" y2="655" stroke="#c8a040" stroke-width="1" opacity="0.7"/>
+      <rect x="930" y="642" width="14" height="40" rx="1" fill="#1a3a8c"/>
+      <rect x="946" y="634" width="20" height="48" rx="1" fill="#4a7820"/>
+      <rect x="968" y="640" width="12" height="42" rx="1" fill="#7a4818"/>
+      <rect x="910" y="682" width="70" height="10" rx="2" fill="#8c7820" opacity="0.8"/> <!-- book lying on top -->
+      <rect x="910" y="678" width="70" height="6"  rx="1" fill="#a09030" opacity="0.6"/>
+
+      <!-- Open book / notebook front-center -->
+      <g transform="translate(1050, 670)">
+        <!-- Book spine shadow -->
+        <rect x="-3" y="-2" width="6" height="22" rx="1" fill="#2a1a08"/>
+        <!-- Left page -->
+        <path d="M-80,0 Q-80,-18 -60,-20 L-3,-18 L-3,20 L-80,20 Z" fill="#f5ead5"/>
+        <!-- Right page -->
+        <path d="M80,0 Q80,-18 60,-20 L3,-18 L3,20 L80,20 Z" fill="#ecdfc0"/>
+        <!-- Page lines left -->
+        <line x1="-72" y1="-8"  x2="-10" y2="-9"  stroke="#c0a870" stroke-width="0.8" opacity="0.7"/>
+        <line x1="-72" y1="-2"  x2="-10" y2="-3"  stroke="#c0a870" stroke-width="0.8" opacity="0.7"/>
+        <line x1="-72" y1="4"   x2="-10" y2="3"   stroke="#c0a870" stroke-width="0.8" opacity="0.7"/>
+        <line x1="-72" y1="10"  x2="-10" y2="9"   stroke="#c0a870" stroke-width="0.8" opacity="0.7"/>
+        <line x1="-72" y1="16"  x2="-10" y2="15"  stroke="#c0a870" stroke-width="0.8" opacity="0.7"/>
+        <!-- Page lines right -->
+        <line x1="10"  y1="-8"  x2="72" y2="-9"   stroke="#b89c68" stroke-width="0.8" opacity="0.7"/>
+        <line x1="10"  y1="-2"  x2="72" y2="-3"   stroke="#b89c68" stroke-width="0.8" opacity="0.7"/>
+        <line x1="10"  y1="4"   x2="72" y2="3"    stroke="#b89c68" stroke-width="0.8" opacity="0.7"/>
+        <line x1="10"  y1="10"  x2="72" y2="9"    stroke="#b89c68" stroke-width="0.8" opacity="0.7"/>
+        <line x1="10"  y1="16"  x2="72" y2="15"   stroke="#b89c68" stroke-width="0.8" opacity="0.7"/>
+        <!-- Small drawn chess diagram on right page (fun detail) -->
+        <rect x="14" y="-14" width="40" height="30" rx="1" fill="none" stroke="#b89c68" stroke-width="0.7" opacity="0.6"/>
+        <rect x="14" y="-14" width="10" height="10" fill="rgba(0,0,0,0.08)"/>
+        <rect x="24" y="-4"  width="10" height="10" fill="rgba(0,0,0,0.08)"/>
+        <rect x="34" y="-14" width="10" height="10" fill="rgba(0,0,0,0.08)"/>
+        <rect x="44" y="-4"  width="10" height="10" fill="rgba(0,0,0,0.08)"/>
+        <text x="18" y="-6"  font-size="6" fill="#8a6040" opacity="0.7">♟</text>
+        <text x="38" y="4"   font-size="6" fill="#8a6040" opacity="0.7">♙</text>
+      </g>
+
+      <!-- Coffee mug -->
+      <rect x="1150" y="650" width="34" height="38" rx="5" fill="#2a2020"/>
+      <rect x="1152" y="652" width="30" height="8"  rx="3" fill="#3a3030"/>
+      <!-- Mug pattern -->
+      <rect x="1152" y="664" width="30" height="2"  fill="rgba(200,160,80,0.4)"/>
+      <!-- Mug handle -->
+      <path d="M1184,660 Q1200,660 1200,669 Q1200,678 1184,678" fill="none" stroke="#2a2020" stroke-width="5"/>
+      <!-- Coffee surface -->
+      <ellipse cx="1167" cy="652" rx="15" ry="4" fill="#4a2010"/>
+      <!-- Steam wisps -->
+      <path class="lib-steam-1" d="M1158,650 Q1161,638 1158,626" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path class="lib-steam-2" d="M1167,648 Q1170,634 1167,620" stroke="rgba(255,255,255,0.45)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path class="lib-steam-3" d="M1176,650 Q1179,637 1176,624" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+      <!-- Pencil on desk -->
+      <rect x="1195" y="685" width="5" height="60" rx="2" fill="#f5c842" transform="rotate(-10 1195 685)"/>
+      <polygon points="1199,745 1196,758 1202,758" fill="#f5a030" transform="rotate(-10 1199 745)"/>
+      <rect x="1196" y="685" width="5" height="6" rx="1" fill="#e8a0a0" transform="rotate(-10 1196 685)"/>
+
+      <!-- Small candle -->
+      <rect x="1220" y="658" width="14" height="28" rx="2" fill="#f0e8c0"/>
+      <rect x="1220" y="658" width="14" height="4"  rx="2" fill="#e0d8b0"/>
+      <line x1="1227" y1="658" x2="1227" y2="651" stroke="#3a2a10" stroke-width="1.5"/>
+      <!-- Candle flame -->
+      <ellipse cx="1227" cy="648" rx="4" ry="6" fill="#ffcc44" class="lib-candle-flame"/>
+      <ellipse cx="1227" cy="649" rx="2" ry="3" fill="#fff5aa"/>
+      <ellipse cx="1227" cy="660" rx="18" ry="12" fill="url(#lib-candle-glow)" class="lib-lamp-flicker" opacity="0.7"/>
+
+      <!-- ══ STUDYING FIGURE (lofi girl style) ══ -->
+      <g transform="translate(1080, 600)" class="lib-figure">
+        <!-- Chair back -->
+        <rect x="-15" y="40" width="6" height="80" rx="3" fill="#3a1e08"/>
+        <rect x="35"  y="40" width="6" height="80" rx="3" fill="#3a1e08"/>
+        <rect x="-15" y="40" width="56" height="8" rx="3" fill="#3a1e08"/>
+        <!-- Body: oversized sweater -->
+        <path d="M-30,35 Q-35,60 -30,90 L55,90 Q60,60 55,35 Q40,28 12,28 Q-14,28 -30,35 Z" fill="#4a3a5a"/>
+        <!-- Arms resting on desk -->
+        <path d="M-30,70 Q-40,80 -35,90 L10,92 Q15,82 10,72 Q-8,68 -30,70 Z" fill="#4a3a5a"/>
+        <path d="M55,70 Q65,80 60,90 L20,92 Q15,82 20,72 Q38,68 55,70 Z" fill="#4a3a5a"/>
+        <!-- Hands -->
+        <ellipse cx="-30" cy="92" rx="14" ry="7" fill="#c4885a" transform="rotate(-5 -30 92)"/>
+        <ellipse cx="58"  cy="92" rx="14" ry="7" fill="#c4885a" transform="rotate(5 58 92)"/>
+        <!-- Head -->
+        <ellipse cx="12" cy="14" rx="26" ry="28" fill="#c4885a"/>
+        <!-- Hair — long, lofi-style, side-swept -->
+        <path d="M-14,8 Q-20,40 -16,72 Q-10,90 -5,100" fill="#1a1008" stroke="#1a1008" stroke-width="2"/>
+        <path d="M-14,8 Q-18,-8 -6,-16 Q8,-22 26,-14 Q38,-8 38,8" fill="#1a1008"/>
+        <!-- Hair falling over face partially -->
+        <path d="M-12,12 Q-8,22 -6,36" fill="#221a0e" stroke="#221a0e" stroke-width="8" stroke-linecap="round"/>
+        <!-- Ear -->
+        <ellipse cx="38" cy="16" rx="6" ry="8" fill="#b87848"/>
+        <!-- Headphones -->
+        <path d="M-13,8 Q-14,-10 12,-12 Q38,-14 38,8" fill="none" stroke="#2a2030" stroke-width="7"/>
+        <rect x="-20" y="6"  width="10" height="16" rx="5" fill="#2a2030"/>
+        <rect x="36"  y="6"  width="10" height="16" rx="5" fill="#2a2030"/>
+        <!-- Headphone detail -->
+        <rect x="-19" y="8"  width="8"  height="12" rx="4" fill="#3a3050"/>
+        <rect x="37"  y="8"  width="8"  height="12" rx="4" fill="#3a3050"/>
+        <!-- Eyes: looking down (closed/half) -->
+        <path d="M2,16  Q6,14 10,16"  fill="none" stroke="#2a1a0a" stroke-width="2" stroke-linecap="round"/>
+        <path d="M16,16 Q20,14 24,16" fill="none" stroke="#2a1a0a" stroke-width="2" stroke-linecap="round"/>
+        <!-- Cheek blush -->
+        <ellipse cx="5"  cy="22" rx="6" ry="3" fill="#d46060" opacity="0.3"/>
+        <ellipse cx="24" cy="22" rx="6" ry="3" fill="#d46060" opacity="0.3"/>
+        <!-- Cable from headphone going down -->
+        <path d="M46,14 Q55,30 52,68" fill="none" stroke="#1a1a20" stroke-width="2" stroke-linecap="round"/>
+      </g>
+
+      <!-- ══ SLEEPING CAT on LEFT SHELF ROW 3 ══ -->
+      <g class="lib-cat-breathe" transform="translate(155, 452)">
+        <!-- Body curled -->
+        <ellipse cx="0" cy="4"  rx="34" ry="16" fill="#5a4530"/>
+        <!-- Head -->
+        <circle cx="26" cy="-8" r="14" fill="#5a4530"/>
+        <!-- Ears -->
+        <polygon points="18,-20 22,-30 28,-20" fill="#5a4530"/>
+        <polygon points="26,-20 32,-30 36,-20" fill="#5a4530"/>
+        <polygon points="19,-21 22,-28 27,-21" fill="#8b6a55" opacity="0.5"/>
+        <polygon points="27,-21 31,-28 35,-21" fill="#8b6a55" opacity="0.5"/>
+        <!-- Closed sleepy eyes -->
+        <path d="M20,-9 Q24,-12 28,-9"  fill="none" stroke="#2a1a08" stroke-width="1.8"/>
+        <path d="M28,-10 Q32,-13 36,-10" fill="none" stroke="#2a1a08" stroke-width="1.8"/>
+        <!-- Nose -->
+        <ellipse cx="28" cy="-5" rx="2" ry="1.5" fill="#d48080" opacity="0.7"/>
+        <!-- Tail curled around -->
+        <path d="M-34,4 Q-48,16 -38,28 Q-28,36 -20,26" fill="none" stroke="#5a4530" stroke-width="10" stroke-linecap="round"/>
+        <!-- Paws tucked under -->
+        <ellipse cx="-8" cy="18" rx="16" ry="8" fill="#4a3820"/>
+        <!-- Fur texture lines -->
+        <path d="M-10,4 Q-5,0 0,4"     fill="none" stroke="#4a3820" stroke-width="1" opacity="0.4"/>
+        <path d="M8,2  Q14,-2 18,4"    fill="none" stroke="#4a3820" stroke-width="1" opacity="0.4"/>
+      </g>
+
+      <!-- ══ WALL SCONCE / PICTURE FRAME ══ -->
+      <!-- Ornate frame left of window -->
+      <rect x="285" y="80" width="150" height="200" rx="4" fill="#4a2808"/>
+      <rect x="289" y="84" width="142" height="192" rx="3" fill="none" stroke="#8c6020" stroke-width="3"/>
+      <rect x="293" y="88" width="134" height="184" rx="2" fill="#0d1e35"/>
+      <!-- Simple landscape inside frame -->
+      <rect x="293" y="200" width="134" height="72" fill="#1a0e08"/>
+      <ellipse cx="360" cy="130" rx="40" ry="35" fill="#1a3050"/>
+      <ellipse cx="330" cy="200" rx="30" ry="40" fill="#152808" opacity="0.8"/>
+      <ellipse cx="390" cy="200" rx="25" ry="38" fill="#152808" opacity="0.7"/>
+      <ellipse cx="360" cy="128" rx="20" ry="15" fill="#d4c060" opacity="0.6"/>
+      <!-- Frame corner ornaments -->
+      <circle cx="289" cy="84"  r="4" fill="#8c6020"/>
+      <circle cx="431" cy="84"  r="4" fill="#8c6020"/>
+      <circle cx="289" cy="276" r="4" fill="#8c6020"/>
+      <circle cx="431" cy="276" r="4" fill="#8c6020"/>
+
+      <!-- Small wall sconce left -->
+      <path d="M268,350 Q270,330 280,325 Q290,330 292,350 Z" fill="#8c6020"/>
+      <ellipse cx="280" cy="350" rx="14" ry="5" fill="#6a4810"/>
+      <ellipse cx="280" cy="368" rx="20" ry="14" fill="url(#lib-candle-glow)" opacity="0.5" class="lib-lamp-flicker"/>
+      <circle cx="280" cy="351" r="4" fill="#ffee88" class="lib-lamp-flicker" filter="url(#lib-glow-md)"/>
+
+      <!-- Picture frame right of window -->
+      <rect x="1000" y="85" width="140" height="180" rx="4" fill="#4a2808"/>
+      <rect x="1004" y="89" width="132" height="172" rx="3" fill="none" stroke="#8c6020" stroke-width="3"/>
+      <rect x="1008" y="93" width="124" height="164" rx="2" fill="#150d05"/>
+      <!-- Chess-themed painting (fun detail) -->
+      <rect x="1012" y="97" width="116" height="130" fill="#0a0802"/>
+      <text x="1026" y="150" font-size="32" fill="rgba(200,160,80,0.6)" font-family="serif">♛</text>
+      <rect x="1008" y="227" width="124" height="30" fill="#1a1008"/>
+      <text x="1028" y="248" font-size="10" fill="#8c6020" font-family="serif" font-style="italic">The Queen</text>
+      <!-- Frame ornaments -->
+      <circle cx="1004" cy="89"  r="4" fill="#8c6020"/>
+      <circle cx="1136" cy="89"  r="4" fill="#8c6020"/>
+      <circle cx="1004" cy="261" r="4" fill="#8c6020"/>
+      <circle cx="1136" cy="261" r="4" fill="#8c6020"/>
+
+      <!-- ══ CEILING DETAILS ══ -->
+      <!-- Wooden ceiling beam across top -->
+      <rect x="0" y="0" width="1440" height="28" fill="#2a1506"/>
+      <rect x="0" y="24" width="1440" height="4"  fill="#4a2808" opacity="0.5"/>
+      <!-- Hanging lamp cord center -->
+      <line x1="720" y1="0" x2="720" y2="60" stroke="#2a1a08" stroke-width="3"/>
+      <ellipse cx="720" cy="64" rx="22" ry="8"  fill="#8c6020"/>
+      <ellipse cx="720" cy="70" rx="16" ry="14" fill="#6a4810"/>
+      <circle  cx="720" cy="78" r="5"   fill="#ffe880" filter="url(#lib-glow-md)"/>
+      <ellipse cx="720" cy="200" rx="180" ry="140" fill="url(#lib-lamp-glow)" opacity="0.5" class="lib-lamp-flicker"/>
+
+      <!-- ══ DUST MOTES ══ -->
+      <g class="lib-dust" opacity="0.6">
+        <circle class="lib-mote-1"  cx="310" cy="380" r="2"   fill="#ffd080"/>
+        <circle class="lib-mote-2"  cx="420" cy="280" r="1.3" fill="#ffcc70"/>
+        <circle class="lib-mote-3"  cx="540" cy="480" r="1.8" fill="#ffd080"/>
+        <circle class="lib-mote-4"  cx="660" cy="320" r="1.2" fill="#ffcc70"/>
+        <circle class="lib-mote-5"  cx="780" cy="420" r="2.2" fill="#ffd080"/>
+        <circle class="lib-mote-6"  cx="870" cy="260" r="1.4" fill="#ffcc70"/>
+        <circle class="lib-mote-7"  cx="360" cy="560" r="1.6" fill="#ffd080"/>
+        <circle class="lib-mote-8"  cx="980" cy="380" r="1.2" fill="#ffcc70"/>
+        <circle class="lib-mote-9"  cx="440" cy="460" r="2.4" fill="#ffd080"/>
+        <circle class="lib-mote-10" cx="680" cy="560" r="1.5" fill="#ffcc70"/>
+      </g>
+
+      <!-- ══ VIGNETTE OVERLAY (darkens edges for cozy focus) ══ -->
+      <radialGradient id="lib-vignette" cx="50%" cy="50%" r="70%">
+        <stop offset="0%"   stop-color="transparent"/>
+        <stop offset="100%" stop-color="rgba(0,0,0,0.55)"/>
+      </radialGradient>
+      <rect width="1440" height="900" fill="url(#lib-vignette)"/>
+    </svg>
+  </div>
+
   <div class="top-bar">
     <div class="nav-pills">
       <button class="nav-btn active" id="btn-pvp">Paul vs Caro</button>
@@ -115,22 +812,13 @@
               <path d="M20.3 14.2A8.6 8.6 0 0 1 9.8 3.7a.7.7 0 0 0-1-.8A9.9 9.9 0 1 0 21.1 15.2a.7.7 0 0 0-.8-1z"/>
             </svg>
           </button>
-          <button class="theme-option" id="theme-cream" role="menuitem" aria-label="Cream mode" title="Cream mode">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <circle cx="12" cy="12" r="4.2" fill="currentColor"/>
-              <path d="M12 2.6v2.5M12 18.9v2.5M2.6 12h2.5M18.9 12h2.5M5.4 5.4l1.8 1.8M16.8 16.8l1.8 1.8M18.6 5.4l-1.8 1.8M7.2 16.8l-1.8 1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
-          </button>
-          <button class="theme-option" id="theme-green" role="menuitem" aria-label="Green mode" title="Green mode">
+<button class="theme-option" id="theme-library" role="menuitem" aria-label="Library mode" title="Library mode">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true">
-              <path d="M1 12C1 12 5 5 12 5C19 5 23 12 23 12C23 12 19 19 12 19C5 19 1 12 1 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-              <circle cx="12" cy="12" r="3" fill="currentColor"/>
-            </svg>
-          </button>
-          <button class="theme-option" id="theme-og" role="menuitem" aria-label="OG mode" title="OG mode">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true">
-              <path d="M3.5 12A8.5 8.5 0 1 0 7 5.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-              <path d="M3.5 8v4.5H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M4 3 Q4 2 5 2 L16 2 Q18 2 18 4 L18 19 Q18 21 16 21 L5 21 Q4 21 4 20 Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              <line x1="4" y1="21" x2="18" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <line x1="8" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity="0.7"/>
+              <line x1="8" y1="10" x2="14" y2="10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity="0.7"/>
+              <line x1="8" y1="13" x2="12" y2="13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity="0.5"/>
             </svg>
           </button>
         </div>
@@ -144,7 +832,10 @@
             <img id="profile-menu-avatar" class="profile-menu-avatar" alt="Profile avatar" />
             <div class="profile-menu-meta">
               <div id="profile-menu-name" class="profile-menu-name">Player</div>
-              <div id="profile-menu-email" class="profile-menu-email"></div>
+              <div class="profile-menu-email-row">
+                <div id="profile-menu-email" class="profile-menu-email"></div>
+                <button id="profile-change-password-btn" class="profile-change-pwd-link" type="button">Change password</button>
+              </div>
             </div>
           </div>
           <div class="profile-edit">
@@ -162,7 +853,7 @@
           <button id="profile-save-btn-menu" class="ctrl-btn" type="button">Save Profile</button>
         </div>
           <div class="profile-menu-actions">
-            <button id="profile-change-password-btn" class="ctrl-btn" type="button">Change Password</button>
+            <button id="profile-invite-partner-btn" class="ctrl-btn" type="button">Invite Partner</button>
             <button id="profile-logout-btn" class="ctrl-btn" type="button">Log Out</button>
           </div>
           <div class="profile-history">
@@ -171,15 +862,6 @@
           </div>
           <p id="profile-menu-status" class="profile-menu-status"></p>
         </div>
-      </div>
-    </div>
-    <div class="countdown-banner hidden" id="reunion-banner">
-      <div class="countdown-text">
-        <span class="countdown-label" id="countdown-label">Days until reunion:</span>
-        <span id="countdown-timer"></span>
-      </div>
-      <div class="countdown-bar-track">
-        <div class="countdown-bar-fill" id="countdown-bar"></div>
       </div>
     </div>
   </div>
@@ -248,6 +930,9 @@
       </div>
     </section>
 
+    <!-- Mobile-only robot button slot, shown below the board on iPhone -->
+    <div id="mobile-robot-slot" class="mobile-robot-slot"></div>
+
     <aside class="panel panel-right">
       <div class="status-box">
         <div class="turn-indicator" id="turn-indicator">
@@ -273,9 +958,134 @@
 
         <div class="controls">
           <button class="ctrl-btn primary" id="btn-new-game">New Game</button>
-          <button class="ctrl-btn" id="btn-undo">↩ Undo</button>
-          <button class="ctrl-btn" id="btn-flip">⇅ Flip Board</button>
+          <button class="ctrl-btn" id="btn-exit-game">Exit Game</button>
           <button class="ctrl-btn" id="btn-resign">⚑ Resign</button>
+          <button class="ctrl-btn robot-btn" id="btn-ask-robot" aria-label="Ask Robot">
+            <svg class="eve-face" viewBox="0 0 54 62" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" overflow="visible">
+              <defs>
+                <clipPath id="ecl"><g transform="rotate(12, 16, 28)"><ellipse cx="16" cy="28" rx="8" ry="6.5"/></g></clipPath>
+                <clipPath id="ecr"><g transform="rotate(-12, 38, 28)"><ellipse cx="38" cy="28" rx="8" ry="6.5"/></g></clipPath>
+                <!-- Clip everything to the head outline -->
+                <clipPath id="hc"><ellipse cx="27" cy="34" rx="25" ry="28"/></clipPath>
+                <!-- Sphere gradient: light source upper-left -->
+                <radialGradient id="hg" cx="12" cy="10" r="44" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%"   stop-color="#ffffff"/>
+                  <stop offset="38%"  stop-color="#e6eaf2"/>
+                  <stop offset="72%"  stop-color="#c2c6d6"/>
+                  <stop offset="100%" stop-color="#8e94aa"/>
+                </radialGradient>
+                <!-- Screen: subtle top-to-bottom gradient -->
+                <linearGradient id="sg" x1="27" y1="12" x2="27" y2="48" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%"   stop-color="#1a2438"/>
+                  <stop offset="100%" stop-color="#020408"/>
+                </linearGradient>
+                <!-- Eye glow: bright centre fading out -->
+                <radialGradient id="egl" cx="16" cy="26" r="7" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%"   stop-color="#d8f4ff"/>
+                  <stop offset="38%"  stop-color="#72ccff" stop-opacity="0.9"/>
+                  <stop offset="100%" stop-color="#1a60ff" stop-opacity="0.05"/>
+                </radialGradient>
+                <radialGradient id="egr" cx="38" cy="26" r="7" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%"   stop-color="#d8f4ff"/>
+                  <stop offset="38%"  stop-color="#72ccff" stop-opacity="0.9"/>
+                  <stop offset="100%" stop-color="#1a60ff" stop-opacity="0.05"/>
+                </radialGradient>
+              </defs>
+
+              <!-- Head: sphere gradient base -->
+              <ellipse cx="27" cy="34" rx="25" ry="28" fill="url(#hg)"/>
+              <!-- All shading clipped strictly to head outline -->
+              <g clip-path="url(#hc)">
+                <!-- Lower-right shadow for roundness -->
+                <ellipse cx="36" cy="52" rx="24" ry="16" fill="rgba(0,0,28,0.20)"/>
+                <!-- Specular highlight upper-left -->
+                <ellipse cx="17" cy="15" rx="9" ry="5.5" fill="white" opacity="0.68"/>
+              </g>
+              <!-- Outline on top -->
+              <ellipse cx="27" cy="34" rx="25" ry="28" fill="none" stroke="#bbbfcc" stroke-width="0.9"/>
+
+              <!-- Screen -->
+              <rect class="eve-screen" x="5" y="12" width="44" height="36" rx="16" fill="url(#sg)"/>
+              <!-- Screen top rim highlight -->
+              <rect x="11" y="12.8" width="32" height="1.2" rx="0.6" fill="rgba(255,255,255,0.09)"/>
+
+              <!-- Blush -->
+              <ellipse class="eve-blush-l" cx="10" cy="44" rx="5.5" ry="3" fill="#ff80b8" opacity="0"/>
+              <ellipse class="eve-blush-r" cx="44" cy="44" rx="5.5" ry="3" fill="#ff80b8" opacity="0"/>
+
+              <!-- LEFT EYE -->
+              <g class="eve-look-l">
+                <g transform="rotate(12, 16, 28)">
+                <g class="eve-blink-l">
+                  <ellipse cx="16" cy="28" rx="8" ry="6.5" fill="#020610"/>
+                  <g class="eve-scanlines-l" clip-path="url(#ecl)">
+                    <rect x="8" y="21.5" width="16" height="1.5" fill="#90d8ff"/>
+                    <rect x="8" y="23.4" width="16" height="1.5" fill="#90d8ff"/>
+                    <rect x="8" y="25.3" width="16" height="1.5" fill="#90d8ff"/>
+                    <rect x="8" y="27.2" width="16" height="1.5" fill="#90d8ff"/>
+                    <rect x="8" y="29.1" width="16" height="1.5" fill="#90d8ff"/>
+                    <rect x="8" y="31.0" width="16" height="1.5" fill="#90d8ff"/>
+                    <rect x="8" y="32.9" width="16" height="1.5" fill="#90d8ff"/>
+                  </g>
+                  <ellipse class="eve-eye-glow-l" cx="16" cy="28" rx="8" ry="6.5" fill="url(#egl)"/>
+                  <ellipse class="eve-eye-spec-l" cx="13" cy="24.5" rx="2.5" ry="1.6" fill="rgba(255,255,255,0.65)" clip-path="url(#ecl)"/>
+                  <!-- Heart eye (love state) — inside blink group so it inherits eye rotation -->
+                  <path class="eve-heart-eye-l" d="M16,32 C9,27 9,22 13.5,22 C15,22 15.8,23 16,24 C16.2,23 17,22 18.5,22 C23,22 23,27 16,32 Z" fill="#ff2878" opacity="0"/>
+                  <ellipse class="eve-heart-spec-l" cx="13.5" cy="24" rx="1.8" ry="1.1" fill="rgba(255,180,210,0.7)" opacity="0"/>
+                </g>
+                </g>
+              </g>
+
+              <!-- RIGHT EYE -->
+              <g class="eve-look-r">
+                <g transform="rotate(-12, 38, 28)">
+                <g class="eve-blink-r">
+                  <ellipse cx="38" cy="28" rx="8" ry="6.5" fill="#020610"/>
+                  <g class="eve-scanlines-r" clip-path="url(#ecr)">
+                    <rect x="30" y="21.5" width="16" height="1.5" fill="#90d8ff"/>
+                    <rect x="30" y="23.4" width="16" height="1.5" fill="#90d8ff"/>
+                    <rect x="30" y="25.3" width="16" height="1.5" fill="#90d8ff"/>
+                    <rect x="30" y="27.2" width="16" height="1.5" fill="#90d8ff"/>
+                    <rect x="30" y="29.1" width="16" height="1.5" fill="#90d8ff"/>
+                    <rect x="30" y="31.0" width="16" height="1.5" fill="#90d8ff"/>
+                    <rect x="30" y="32.9" width="16" height="1.5" fill="#90d8ff"/>
+                  </g>
+                  <ellipse class="eve-eye-glow-r" cx="38" cy="28" rx="8" ry="6.5" fill="url(#egr)"/>
+                  <ellipse class="eve-eye-spec-r" cx="35" cy="24.5" rx="2.5" ry="1.6" fill="rgba(255,255,255,0.65)" clip-path="url(#ecr)"/>
+                  <!-- Heart eye (love state) -->
+                  <path class="eve-heart-eye-r" d="M38,32 C31,27 31,22 35.5,22 C37,22 37.8,23 38,24 C38.2,23 39,22 40.5,22 C45,22 45,27 38,32 Z" fill="#ff2878" opacity="0"/>
+                  <ellipse class="eve-heart-spec-r" cx="35.5" cy="24" rx="1.8" ry="1.1" fill="rgba(255,180,210,0.7)" opacity="0"/>
+                </g>
+                </g>
+              </g>
+
+              <!-- Thinking sweep line -->
+              <rect class="eve-scanline" x="5" y="26.5" width="44" height="3" rx="1.5" fill="#38c8ff" opacity="0"/>
+
+              <!-- Sleep ZZZs (hidden by default, shown in robot-sleep state) -->
+              <g class="eve-zzz" opacity="0">
+                <text class="zzz-1" x="40" y="18" font-family="system-ui,sans-serif" font-size="5" font-weight="900" fill="#8888ee" opacity="0">z</text>
+                <text class="zzz-2" x="46" y="11" font-family="system-ui,sans-serif" font-size="7" font-weight="900" fill="#9999ff" opacity="0">z</text>
+                <text class="zzz-3" x="53" y="3"  font-family="system-ui,sans-serif" font-size="9" font-weight="900" fill="#aaaaff" opacity="0">Z</text>
+              </g>
+
+              <!-- Bored text (pre-sleep state) -->
+              <text class="eve-bored-text" x="27" y="33" font-family="monospace,system-ui,sans-serif" font-size="7.5" font-weight="700" fill="#7777bb" text-anchor="middle" opacity="0">bored</text>
+
+              <!-- Love awww (hidden by default, shown in robot-love state) -->
+              <g class="eve-awww" opacity="0">
+                <text class="awww-1" x="1" y="15" font-family="system-ui,sans-serif" font-size="5.5" font-weight="900" fill="#ff4090" opacity="0">awww</text>
+                <text class="awww-2" x="-4" y="5" font-family="system-ui,sans-serif" font-size="7" font-weight="900" fill="#ff70b8" opacity="0">awww ♥</text>
+              </g>
+            </svg>
+            <span class="robot-btn-label">Ask</span>
+          </button>
+        </div>
+        <div id="robot-panel" class="robot-panel hidden">
+          <div class="robot-panel-header">
+            <span class="robot-panel-title">Suggested moves</span>
+            <button class="robot-panel-close" id="robot-panel-close" type="button">✕</button>
+          </div>
         </div>
 
         <div class="settings-box">
@@ -318,9 +1128,7 @@
     </aside>
   </main>
 
-  <div id="love-overlay" class="love-overlay hidden">
-    <div class="love-text">I love you ♥</div>
-  </div>
+  <div id="love-overlay" class="love-overlay hidden"></div>
 
   <div id="yapping-toast" class="yapping-toast hidden">
     <span class="yapping-toast-icon">☕</span>
@@ -390,19 +1198,32 @@
     </div>
   </div>
 
+  <div id="partner-invite-overlay" class="overlay hidden">
+    <div class="modal partner-invite-modal">
+      <div class="modal-icon">✉</div>
+      <h2>Partner Invited You</h2>
+      <p id="partner-invite-msg">Your partner invited you to join a game.</p>
+      <div class="modal-buttons">
+        <button class="ctrl-btn primary" id="partner-invite-join-btn" type="button">Join</button>
+        <button class="ctrl-btn" id="partner-invite-ignore-btn" type="button">Ignore</button>
+      </div>
+    </div>
+  </div>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
   const firebaseConfig = {
-    apiKey: "AIzaSyBp8hIlxYuJJPELWGlK87cOApBNfHVuRO4",
-    authDomain: "chess-web-app-26069.firebaseapp.com",
-    databaseURL: "https://chess-web-app-26069-default-rtdb.firebaseio.com",
-    projectId: "chess-web-app-26069",
-    storageBucket: "chess-web-app-26069.firebasestorage.app",
-    messagingSenderId: "619379564323",
-    appId: "1:619379564323:web:f385235399e04ee04c7696"
+    apiKey: "AIzaSyCMdd_n_dXHUdWyK3W136Qv786RFW_QKDE",
+    authDomain: "playdate-94b08.firebaseapp.com",
+    databaseURL: "https://playdate-94b08-default-rtdb.firebaseio.com",
+    projectId: "playdate-94b08",
+    storageBucket: "playdate-94b08.firebasestorage.app",
+    messagingSenderId: "692149750775",
+    appId: "1:692149750775:web:2de549acecdc936863bcf2",
+    measurementId: "G-Z5CR49NHJY"
   };
 
   firebase.initializeApp(firebaseConfig);
@@ -415,127 +1236,16 @@
   })();
 </script>
 
-<script src="auth.js?v=11"></script>
+<script src="auth.js?v=14"></script>
 <script src="pieces.js?v=8"></script>
 <script src="chat.js?v=5"></script>
 <script src="webrtc.js?v=12"></script>
 <script src="fluid-bg.js?v=5"></script>
-<script src="board.js?v=7"></script>
-<script src="game.js?v=29"></script>
-<script src="main.js?v=29"></script>
-<script src="profile-menu.js?v=5"></script>
-<script>
-window.addEventListener("load", () => {
-  const text = document.getElementById("loading-text");
-  const screen = document.getElementById("loading-screen");
-  if (text) text.textContent = "ChessTime";
-
-  setTimeout(() => {
-    if (screen) {
-      screen.style.opacity = "0";
-      setTimeout(() => {
-        screen.style.display = "none";
-      }, 500);
-    }
-  }, 2000);
-});
-
-const reunionState = { targetAt: null };
-
-function normalizeEmail(value) {
-  return String(value || '').trim().toLowerCase();
-}
-
-function safeTimestamp(value) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : null;
-}
-
-function isSeatLiveForReunion(seat) {
-  if (!seat || !seat.connectedAt) return false;
-  return (Date.now() - Number(seat.connectedAt)) < 30000;
-}
-
-function pickReunionFromSeats(seats) {
-  const w = seats?.w;
-  const b = seats?.b;
-  if (!isSeatLiveForReunion(w) || !isSeatLiveForReunion(b)) return null;
-
-  const wEmail = normalizeEmail(w.email);
-  const bEmail = normalizeEmail(b.email);
-  if (!wEmail || !bEmail) return null;
-
-  const candidates = [];
-  if (normalizeEmail(w.reunionPartnerEmail) === bEmail) {
-    const ts = safeTimestamp(w.reunionAt);
-    if (ts) candidates.push(ts);
-  }
-  if (normalizeEmail(b.reunionPartnerEmail) === wEmail) {
-    const ts = safeTimestamp(b.reunionAt);
-    if (ts) candidates.push(ts);
-  }
-
-  if (!candidates.length) return null;
-  const future = candidates.filter(ts => ts > Date.now()).sort((a, b) => a - b);
-  if (future.length) return future[0];
-  return candidates.sort((a, b) => b - a)[0];
-}
-
-function hideReunionCountdown() {
-  reunionState.targetAt = null;
-  const banner = document.getElementById('reunion-banner');
-  if (banner) banner.classList.add('hidden');
-}
-
-function renderReunionCountdown() {
-  const banner = document.getElementById('reunion-banner');
-  const label = document.getElementById('countdown-label');
-  const el = document.getElementById('countdown-timer');
-  const bar = document.getElementById('countdown-bar');
-  const text = document.querySelector('.countdown-text');
-  const track = document.querySelector('.countdown-bar-track');
-  if (!banner || !el) return;
-
-  const targetAt = reunionState.targetAt;
-  if (!targetAt) {
-    banner.classList.add('hidden');
-    return;
-  }
-
-  banner.classList.remove('hidden');
-  if (label) label.textContent = 'Days until reunion:';
-
-  const now = Date.now();
-  const diff = targetAt - now;
-
-  if (diff <= 0) {
-    el.textContent = 'Reunion day! ♥';
-    if (bar) bar.style.width = '100%';
-    return;
-  }
-
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-  el.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-
-  if (track && text) track.style.width = text.offsetWidth + 'px';
-  if (bar) {
-    const sixtyDays = 1000 * 60 * 60 * 24 * 60;
-    const pct = Math.max(8, Math.min(100, 100 - (diff / sixtyDays) * 100));
-    bar.style.width = pct + '%';
-  }
-}
-
-window.updateReunionFromSeats = function (seats) {
-  reunionState.targetAt = pickReunionFromSeats(seats);
-  renderReunionCountdown();
-};
-
-hideReunionCountdown();
-setInterval(renderReunionCountdown, 1000);
-</script>
+<script src="board.js?v=8"></script>
+<script src="game.js?v=31"></script>
+<script src="main.js?v=42"></script>
+<script src="robot.js?v=23"></script>
+<script src="profile-menu.js?v=8"></script>
 
 </body>
 </html>

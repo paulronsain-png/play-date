@@ -6,7 +6,6 @@ let aiMode = false;
 document.addEventListener('DOMContentLoaded', () => {
   const heart   = document.getElementById('beating-heart');
   const overlay = document.getElementById('love-overlay');
-  const text    = overlay?.querySelector('.love-text');
   if (!heart || !overlay) return;
 
   let loveTimer = null;
@@ -14,19 +13,18 @@ document.addEventListener('DOMContentLoaded', () => {
   window.showLoveOverlay = function() {
     clearTimeout(loveTimer);
     overlay.classList.remove('hidden');
-    text.classList.remove('fading');
     for (let i = 0; i < 28; i++) {
       setTimeout(() => spawnSplashHeart(), i * 60);
     }
     loveTimer = setTimeout(() => {
-      text.classList.add('fading');
-      setTimeout(() => overlay.classList.add('hidden'), 500);
-    }, 1800);
+      overlay.classList.add('hidden');
+    }, 2000);
   };
 
   heart.style.cursor = 'pointer';
   heart.addEventListener('click', () => {
     window.showLoveOverlay();
+    window.walleReact?.('love');
     // Broadcast to other player
     if (window.db) {
       window.db.ref('games/' + GAME_ID).update({ loveAt: Date.now() });
@@ -58,6 +56,7 @@ function render() {
   renderClocks(state);
 }
 
+
 function startNewGame() {
   clearInterval(clockInterval);
   clearTimeout(lastMoveTimer);
@@ -88,7 +87,12 @@ document.getElementById('board').addEventListener('click', e => {
   if (!sq || !state) return;
   const r = parseInt(sq.dataset.r);
   const c = parseInt(sq.dataset.c);
+  const prevLen = state.moveHistory.length;
   handleSquareClick(state, r, c, aiMode, doAITurn);
+  if (state.moveHistory.length !== prevLen) {
+    window.hideRobotPanel?.();
+    window.walleReact?.('happy');
+  }
   if (!state.pendingPromo) render();
 });
 
@@ -164,7 +168,12 @@ document.getElementById('board').addEventListener('click', e => {
       const tc = parseInt(toSq.dataset.c);
       state.selected = [fr, fc];
       if (tr !== fr || tc !== fc) {
+        const prevLen2 = state.moveHistory.length;
         handleSquareClick(state, tr, tc, aiMode, doAITurn);
+        if (state.moveHistory.length !== prevLen2) {
+          window.hideRobotPanel?.();
+          window.walleReact?.('happy');
+        }
         if (!state.pendingPromo) render();
       } else {
         // Dropped on same square — treat as tap select
@@ -219,14 +228,20 @@ document.getElementById('btn-new-game').addEventListener('click', () => {
 document.getElementById('modal-new').addEventListener('click', startNewGame);
 document.getElementById('modal-close').addEventListener('click', hideModal);
 
-document.getElementById('btn-flip').addEventListener('click', () => flipBoard(state));
-
-document.getElementById('btn-undo').addEventListener('click', () => {
-  showModal('😭', 'Undo', 'In your dreams!');
-  const confirmBtn = document.getElementById('modal-new');
-  const closeBtn   = document.getElementById('modal-close');
-  confirmBtn.style.display = 'none';
-  closeBtn.onclick = () => { confirmBtn.style.display = 'block'; hideModal(); };
+document.getElementById('btn-exit-game').addEventListener('click', async () => {
+  const db = window.db;
+  const user = window.currentUser;
+  const gameId = String(window.GAME_ID || '').trim();
+  const color = typeof getMyColor === 'function' ? getMyColor() : null;
+  if (!gameId) return;
+  try {
+    if (db && user?.uid && color) {
+      await db.ref(`games/${gameId}/seats/${color}`).remove();
+    }
+  } catch (_) {}
+  sessionStorage.removeItem('myColor');
+  window.GAME_ID = '';
+  window.location.href = `${window.location.origin}${window.location.pathname}`;
 });
 
 document.getElementById('btn-resign').addEventListener('click', () => {
@@ -241,6 +256,22 @@ document.getElementById('btn-resign').addEventListener('click', () => {
     showModal('⚑', 'Resigned', `${loser} resigned. ${winner} wins!`);
     syncStateToFirebase(state);
   });
+});
+
+document.getElementById('btn-ask-robot').addEventListener('click', () => {
+  if (!state || state.gameOver) return;
+  if (typeof window.askRobot === 'function') window.askRobot(state);
+});
+
+// On mobile: move the robot button into the dedicated slot below the board
+if (window.innerWidth <= 600) {
+  const btn  = document.getElementById('btn-ask-robot');
+  const slot = document.getElementById('mobile-robot-slot');
+  if (btn && slot) slot.appendChild(btn);
+}
+
+document.getElementById('robot-panel-close').addEventListener('click', () => {
+  if (typeof window.hideRobotPanel === 'function') window.hideRobotPanel();
 });
 
 document.getElementById('btn-pvp').addEventListener('click', () => {
@@ -267,10 +298,8 @@ const btn = document.getElementById('theme-toggle');
 const pvpBtn = document.getElementById('btn-pvp');
 const aiBtn = document.getElementById('btn-ai');
 const themeMenuWrap = document.getElementById('theme-menu-wrap');
-const themeBtnDark = document.getElementById('theme-dark');
-const themeBtnGreen = document.getElementById('theme-green');
-const themeBtnCream = document.getElementById('theme-cream');
-const themeBtnOg   = document.getElementById('theme-og');
+const themeBtnDark    = document.getElementById('theme-dark');
+const themeBtnLibrary = document.getElementById('theme-library');
 const paulAvatar = document.querySelector('#card-white .avatar-img');
 const caroAvatar = document.querySelector('#card-black .avatar-img');
 const whiteNameEl = document.querySelector('#card-white .player-name');
@@ -337,8 +366,8 @@ function robotAvatarDataUri() {
     </defs>
     <rect x="0" y="0" width="120" height="120" rx="60" fill="#0f2233"/>
     <rect x="30" y="28" width="60" height="44" rx="10" fill="url(#g)" stroke="#bde8ff" stroke-opacity="0.65" stroke-width="2"/>
-    <circle cx="48" cy="50" r="6" fill="#2f5f86"/>
-    <circle cx="72" cy="50" r="6" fill="#2f5f86"/>
+    <ellipse cx="48" cy="50" rx="7.8" ry="5.0" transform="rotate(-36 48 50)" fill="#2f5f86"/>
+    <ellipse cx="72" cy="50" rx="7.8" ry="5.0" transform="rotate(36 72 50)" fill="#2f5f86"/>
     <rect x="44" y="62" width="32" height="4" rx="2" fill="#2f5f86" fill-opacity="0.8"/>
     <rect x="36" y="80" width="48" height="24" rx="10" fill="url(#g)" stroke="#bde8ff" stroke-opacity="0.5" stroke-width="2"/>
     <rect x="56" y="18" width="8" height="10" rx="4" fill="#bde8ff"/>
@@ -370,28 +399,19 @@ window.setMultiplayerIdentity = function(nextIdentity = {}) {
   if (!aiMode) applyCardIdentity(seatIdentity);
 };
 
-function applyPieceTheme(themeMode) {
-  if (themeMode === 'og') {
-    // OG mode: emoji hearts for kings, text-rendered (dark-mode look) for all other pieces
-    Object.assign(SYMBOLS, {
-      wK:'\u2764\uFE0F', wQ:'♛\uFE0E', wR:'♜\uFE0E', wB:'♝\uFE0E', wN:'♞\uFE0E', wP:'♟\uFE0E',
-      bK:'\uD83E\uDDE1', bQ:'♛\uFE0E', bR:'♜\uFE0E', bB:'♝\uFE0E', bN:'♞\uFE0E', bP:'♟\uFE0E'
-    });
-  } else {
-    // All other modes: force text presentation so CSS colour applies on iOS
-    Object.assign(SYMBOLS, {
-      wK:'♥\uFE0E', wQ:'♛\uFE0E', wR:'♜\uFE0E', wB:'♝\uFE0E', wN:'♞\uFE0E', wP:'♟\uFE0E',
-      bK:'♥\uFE0E', bQ:'♛\uFE0E', bR:'♜\uFE0E', bB:'♝\uFE0E', bN:'♞\uFE0E', bP:'♟\uFE0E'
-    });
-  }
+function applyPieceTheme() {
+  Object.assign(SYMBOLS, {
+    wK:'♥\uFE0E', wQ:'♛\uFE0E', wR:'♜\uFE0E', wB:'♝\uFE0E', wN:'♞\uFE0E', wP:'♟\uFE0E',
+    bK:'♥\uFE0E', bQ:'♛\uFE0E', bR:'♜\uFE0E', bB:'♝\uFE0E', bN:'♞\uFE0E', bP:'♟\uFE0E'
+  });
 }
 
 const THEME_MAP = {
-  dark:  'dark-mode',
-  green: 'light-mode',
-  cream: 'cream-mode',
-  og:    'og-mode'
+  dark:    'dark-mode',
+  library: 'library-mode'
 };
+
+const bookSVG = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16" style="display:inline-block;vertical-align:middle"><path d="M4 3 Q4 2 5 2 L16 2 Q18 2 18 4 L18 19 Q18 21 16 21 L5 21 Q4 21 4 20 Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><line x1="4" y1="21" x2="18" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity="0.7"/><line x1="8" y1="10" x2="14" y2="10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity="0.7"/><line x1="8" y1="13" x2="12" y2="13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity="0.5"/></svg>`;
 
 const eyeSVG    = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16" style="display:inline-block;vertical-align:middle"><path d="M1 12C1 12 5 5 12 5C19 5 23 12 23 12C23 12 19 19 12 19C5 19 1 12 1 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>`;
 const moonSVG   = `<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" width="16" height="16" style="display:inline-block;vertical-align:middle"><path d="M20.3 14.2A8.6 8.6 0 0 1 9.8 3.7a.7.7 0 0 0-1-.8A9.9 9.9 0 1 0 21.1 15.2a.7.7 0 0 0-.8-1z"/></svg>`;
@@ -412,52 +432,36 @@ function openThemeMenu() {
 
 function setTheme(mode) {
   const className = THEME_MAP[mode] || THEME_MAP.dark;
-  document.body.classList.remove('dark-mode', 'light-mode', 'cream-mode', 'og-mode');
+  document.body.classList.remove('dark-mode', 'light-mode', 'cream-mode', 'og-mode', 'library-mode');
   document.body.classList.add(className);
 
-  if (themeBtnDark)  themeBtnDark.classList.toggle('active', mode === 'dark');
-  if (themeBtnGreen) themeBtnGreen.classList.toggle('active', mode === 'green');
-  if (themeBtnCream) themeBtnCream.classList.toggle('active', mode === 'cream');
-  if (themeBtnOg)    themeBtnOg.classList.toggle('active', mode === 'og');
-  if (themeBtnDark)  themeBtnDark.classList.toggle('hidden-selected', mode === 'dark');
-  if (themeBtnGreen) themeBtnGreen.classList.toggle('hidden-selected', mode === 'green');
-  if (themeBtnCream) themeBtnCream.classList.toggle('hidden-selected', mode === 'cream');
-  if (themeBtnOg)    themeBtnOg.classList.toggle('hidden-selected', mode === 'og');
+  if (themeBtnDark)    themeBtnDark.classList.toggle('active', mode === 'dark');
+  if (themeBtnLibrary) themeBtnLibrary.classList.toggle('active', mode === 'library');
+  if (themeBtnDark)    themeBtnDark.classList.toggle('hidden-selected', mode === 'dark');
+  if (themeBtnLibrary) themeBtnLibrary.classList.toggle('hidden-selected', mode === 'library');
 
   if (btn) {
-    if (mode === 'green') btn.innerHTML = eyeSVG;
-    else if (mode === 'cream') btn.innerHTML = sunSVG;
-    else if (mode === 'og') btn.innerHTML = rewindSVG;
-    else btn.innerHTML = moonSVG;
+    btn.innerHTML = mode === 'library' ? bookSVG : moonSVG;
     btn.style.color = '';
   }
 
-  // OG mode: let heart render as emoji (warm red). All others: force text rendering for CSS colour.
   const heartEl = document.getElementById('beating-heart');
-  if (heartEl) heartEl.textContent = mode === 'og' ? '♥\uFE0F' : '♥\uFE0E';
+  if (heartEl) heartEl.textContent = '♥\uFE0E';
 
-  applyPieceTheme(mode);
+  applyPieceTheme();
   applyModeUI();
   if (state) render();
 }
 
-document.body.classList.add('dark-mode');
+document.body.classList.add('library-mode');
 applyModeUI();
-setTheme('dark');
+setTheme('library');
 
+let currentTheme = 'library';
 btn.addEventListener('click', e => {
   e.preventDefault();
-  if (themeMenuWrap?.classList.contains('open')) closeThemeMenu();
-  else openThemeMenu();
-});
-themeBtnDark?.addEventListener('click',  () => { setTheme('dark');  closeThemeMenu(); });
-themeBtnGreen?.addEventListener('click', () => { setTheme('green'); closeThemeMenu(); });
-themeBtnCream?.addEventListener('click', () => { setTheme('cream'); closeThemeMenu(); });
-themeBtnOg?.addEventListener('click',    () => { setTheme('og');    closeThemeMenu(); });
-
-document.addEventListener('click', e => {
-  if (!themeMenuWrap || themeMenuWrap.contains(e.target)) return;
-  closeThemeMenu();
+  currentTheme = currentTheme === 'dark' ? 'library' : 'dark';
+  setTheme(currentTheme);
 });
 
 // ─── Boot sequence ────────────────────────────────────────────────────────────
