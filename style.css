@@ -3973,3 +3973,186 @@ body.library-mode .coords-right span {
 /* ── Scrollbar ── */
 body.library-mode ::-webkit-scrollbar-track { background: rgba(20, 10, 3, 0.5); }
 body.library-mode ::-webkit-scrollbar-thumb { background: rgba(160, 100, 40, 0.4); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MAP VIEW
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#map-view {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: #2a4a32;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#map-view.hidden { display: none; }
+
+#map-canvas {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+  cursor: default;
+}
+
+/* ── Header bar ─────────────────────────────────────────────────────────── */
+.map-header {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 46px;
+  background: rgba(10, 20, 12, 0.82);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  z-index: 10;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.18);
+}
+
+.map-title {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffd700;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+}
+
+.map-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.map-exit-btn {
+  background: rgba(180, 40, 40, 0.75);
+  border: 1px solid rgba(255, 80, 80, 0.35);
+  color: #ffbbbb;
+  font-family: monospace;
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.map-exit-btn:hover { background: rgba(200, 50, 50, 0.9); color: #fff; }
+
+/* ── Mobile controls ─────────────────────────────────────────────────────── */
+.map-mobile-controls {
+  position: absolute;
+  bottom: 24px;
+  left: 20px;
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.map-dpad {
+  width: 116px;
+  height: 116px;
+  pointer-events: all;
+  touch-action: none;
+  user-select: none;
+}
+
+.dpad-ring {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(4px);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dpad-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.dpad-arrow {
+  position: absolute;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 11px;
+  line-height: 1;
+  pointer-events: none;
+}
+.dpad-up    { top: 8px;    left: 50%; transform: translateX(-50%); }
+.dpad-down  { bottom: 8px; left: 50%; transform: translateX(-50%); }
+.dpad-left  { left: 8px;   top: 50%;  transform: translateY(-50%); }
+.dpad-right { right: 8px;  top: 50%;  transform: translateY(-50%); }
+
+.map-enter-btn {
+  pointer-events: all;
+  background: rgba(255, 215, 0, 0.88);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: #1a0e00;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 14px;
+  padding: 12px 22px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 3px 14px rgba(255, 215, 0, 0.4);
+  transition: background 0.15s, transform 0.1s;
+}
+.map-enter-btn:active { transform: scale(0.95); }
+.map-enter-btn.hidden { display: none; }
+
+/* ── Coming-soon toast ──────────────────────────────────────────────────── */
+.map-toast {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.82);
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  color: #ffd700;
+  font-family: monospace;
+  font-size: 14px;
+  padding: 9px 22px;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 30;
+  white-space: nowrap;
+}
+.map-toast.hidden { display: none; }
+
+/* ── Only visible in session mode ──────────────────────────────────────── */
+.session-only.hidden { display: none; }
+
+/* Hide mobile d-pad on desktop */
+@media (hover: hover) and (pointer: fine) {
+  .map-mobile-controls { display: none; }
+}
+
+/* Show d-pad on touch devices */
+@media (hover: none) {
+  .map-mobile-controls { display: flex; }
+}
+
+/* ── Back to Map button ─────────────────────────────────────────────────── */
+#btn-back-to-map {
+  background: rgba(74, 122, 85, 0.85);
+  border-color: rgba(100, 180, 120, 0.5);
+  color: #c8f0d0;
+  font-weight: 600;
+}
+#btn-back-to-map:hover {
+  background: rgba(74, 122, 85, 1);
+  color: #fff;
+}
+#btn-back-to-map.hidden { display: none; }

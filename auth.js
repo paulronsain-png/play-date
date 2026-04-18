@@ -18,18 +18,28 @@
   function gameIdFromInput(raw) {
     const text = (raw || '').trim();
     if (!text) return '';
-
     const direct = sanitizeGameId(text);
     if (direct) return direct;
-
     try {
       const url = new URL(text);
       const fromQuery = sanitizeGameId(url.searchParams.get('game'));
       if (fromQuery) return fromQuery;
     } catch (_) {}
-
     const fromPattern = /[?&]game=([A-Za-z0-9_-]{6,64})/.exec(text);
     if (fromPattern && fromPattern[1]) return sanitizeGameId(fromPattern[1]);
+    return '';
+  }
+
+  function sessionIdFromInput(raw) {
+    const text = (raw || '').trim();
+    if (!text) return '';
+    try {
+      const url = new URL(text);
+      const s = sanitizeGameId(url.searchParams.get('session'));
+      if (s) return s;
+    } catch (_) {}
+    const m = /[?&]session=([A-Za-z0-9_-]{6,64})/.exec(text);
+    if (m && m[1]) return sanitizeGameId(m[1]);
     return '';
   }
 
@@ -38,9 +48,19 @@
     return sanitizeGameId(params.get('game'));
   }
 
+  function sessionIdFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return sanitizeGameId(params.get('session'));
+  }
+
   function buildGameUrl(gameId) {
     const base = `${window.location.origin}${window.location.pathname}`;
     return `${base}?game=${encodeURIComponent(gameId)}`;
+  }
+
+  function buildSessionUrl(sessionId) {
+    const base = `${window.location.origin}${window.location.pathname}`;
+    return `${base}?session=${encodeURIComponent(sessionId)}`;
   }
 
   function randomGameId() {
@@ -189,11 +209,6 @@
     const joinInput = byId('join-link-input');
     const joinBtn = byId('join-game-btn');
     const logoutBtn = byId('auth-logout-btn');
-    const partnerInviteOverlay = byId('partner-invite-overlay');
-    const partnerInviteMsg = byId('partner-invite-msg');
-    const partnerInviteJoinBtn = byId('partner-invite-join-btn');
-    const partnerInviteIgnoreBtn = byId('partner-invite-ignore-btn');
-    let activePartnerInvite = null;
     let partnerInviteQueryRef = null;
     let partnerInviteListener = null;
 
@@ -203,70 +218,7 @@
       authMessage.classList.toggle('ok', !!ok);
     }
 
-    function closePartnerInviteModal() {
-      activePartnerInvite = null;
-      partnerInviteOverlay?.classList.add('hidden');
-    }
 
-    async function setPartnerInviteStatus(invite, status) {
-      if (!db || !invite?.gameId) return;
-      try {
-        await db.ref(`games/${invite.gameId}/partnerInvite`).update({
-          status,
-          respondedAt: Date.now(),
-          respondedBy: auth?.currentUser?.uid || null
-        });
-      } catch (_) {}
-    }
-
-    function showPartnerInviteModal(invite) {
-      if (!invite || !partnerInviteOverlay || !partnerInviteMsg) return;
-      activePartnerInvite = invite;
-      const sender = String(invite.senderName || invite.senderEmail || 'Your partner').trim();
-      partnerInviteMsg.textContent = `${sender} invited you to a game.`;
-      partnerInviteOverlay.classList.remove('hidden');
-    }
-
-    async function findLatestPartnerInvite(targetEmail, myUid) {
-      if (!db || !targetEmail) return null;
-      try {
-        const snap = await db
-          .ref('games')
-          .orderByChild('partnerInvite/targetEmail')
-          .equalTo(targetEmail)
-          .limitToLast(20)
-          .once('value');
-        const all = snap.val() || {};
-        const candidates = [];
-        Object.keys(all).forEach((gameId) => {
-          const entry = all[gameId]?.partnerInvite || null;
-          if (!entry) return;
-          if (String(entry.status || '') !== 'pending') return;
-          if (normalizeEmail(entry.targetEmail) !== targetEmail) return;
-          if (entry.senderUid && entry.senderUid === myUid) return;
-          candidates.push({
-            gameId,
-            senderUid: entry.senderUid || '',
-            senderEmail: entry.senderEmail || '',
-            senderName: entry.senderName || '',
-            createdAt: Number(entry.createdAt || 0)
-          });
-        });
-        candidates.sort((a, b) => b.createdAt - a.createdAt);
-        return candidates[0] || null;
-      } catch (_) {
-        return null;
-      }
-    }
-
-    async function maybeShowPartnerInvite(user) {
-      if (!user) return;
-      const targetEmail = normalizeEmail(user.email);
-      if (!targetEmail) return;
-      const invite = await findLatestPartnerInvite(targetEmail, user.uid);
-      if (!invite) return;
-      showPartnerInviteModal(invite);
-    }
 
     function stopPartnerInviteListener() {
       if (partnerInviteQueryRef && partnerInviteListener) {
@@ -276,47 +228,6 @@
       partnerInviteListener = null;
     }
 
-    function startPartnerInviteListener(user) {
-      stopPartnerInviteListener();
-      if (!db || !user) return;
-      const targetEmail = normalizeEmail(user.email);
-      if (!targetEmail) return;
-
-      partnerInviteQueryRef = db
-        .ref('games')
-        .orderByChild('partnerInvite/targetEmail')
-        .equalTo(targetEmail)
-        .limitToLast(20);
-
-      partnerInviteListener = (snap) => {
-        if (!snap) return;
-        const all = snap.val() || {};
-        const candidates = [];
-        Object.keys(all).forEach((gameId) => {
-          const entry = all[gameId]?.partnerInvite || null;
-          if (!entry) return;
-          if (String(entry.status || '') !== 'pending') return;
-          if (normalizeEmail(entry.targetEmail) !== targetEmail) return;
-          if (entry.senderUid && entry.senderUid === user.uid) return;
-          candidates.push({
-            gameId,
-            senderUid: entry.senderUid || '',
-            senderEmail: entry.senderEmail || '',
-            senderName: entry.senderName || '',
-            createdAt: Number(entry.createdAt || 0)
-          });
-        });
-        candidates.sort((a, b) => b.createdAt - a.createdAt);
-        const invite = candidates[0] || null;
-        if (!invite) return;
-        if (activePartnerInvite && activePartnerInvite.gameId === invite.gameId && activePartnerInvite.createdAt === invite.createdAt) {
-          return;
-        }
-        showPartnerInviteModal(invite);
-      };
-
-      partnerInviteQueryRef.on('value', partnerInviteListener);
-    }
 
     function friendlyAuthError(err) {
       const code = err && err.code ? String(err.code) : '';
@@ -623,41 +534,62 @@
 
     createBtn?.addEventListener('click', async () => {
       const user = auth?.currentUser;
-      if (!user) {
-        showMessage('Please log in first.');
-        return;
-      }
-      const gameId = randomGameId();
-      window.GAME_ID = gameId;
-      showMessage('Creating your game link...', true);
+      if (!user) { showMessage('Please log in first.'); return; }
+      const profile = window.currentProfile || {};
+      const partnerEmail = normalizeEmail(profile.reunionPartnerEmail || '');
+      const sessionId = randomGameId();
+      showMessage('Creating session...', true);
       try {
         if (db) {
-          await db.ref(`games/${gameId}/meta`).update({
+          const sessionData = {
             createdBy: user.uid,
             createdByEmail: user.email || '',
             createdAt: Date.now(),
-          });
+            profiles: {
+              host: {
+                uid: user.uid,
+                displayName: profile.displayName || '',
+                avatarDataUrl: profile.avatarDataUrl || '',
+              }
+            }
+          };
+          if (partnerEmail && partnerEmail !== normalizeEmail(user.email)) {
+            sessionData.invite = {
+              targetEmail: partnerEmail,
+              senderUid: user.uid,
+              senderEmail: user.email || '',
+              senderName: profile.displayName || user.email || '',
+              status: 'pending',
+              createdAt: Date.now(),
+            };
+          }
+          await db.ref(`sessions/${sessionId}`).set(sessionData);
         }
-      } catch (_) {
-        // If metadata write fails, link-based routing still works.
-      }
-      window.location.href = buildGameUrl(gameId);
+      } catch (_) {}
+      window.location.href = buildSessionUrl(sessionId);
     });
 
     joinBtn?.addEventListener('click', () => {
-      const gameId = gameIdFromInput(joinInput?.value || '');
-      if (!gameId) {
-        showMessage('Paste a valid game link.');
+      const raw = joinInput?.value || '';
+      // Try session link first
+      const sessionId = sessionIdFromInput(raw);
+      if (sessionId) {
+        window.location.href = buildSessionUrl(sessionId);
         return;
       }
-      window.GAME_ID = gameId;
-      window.location.href = buildGameUrl(gameId);
+      // Fall back to game ID (direct chess link, backward compat)
+      const gameId = gameIdFromInput(raw);
+      if (gameId) {
+        window.GAME_ID = gameId;
+        window.location.href = buildGameUrl(gameId);
+        return;
+      }
+      showMessage('Paste a valid session or game link.');
     });
 
     logoutBtn?.addEventListener('click', async () => {
       try {
         stopPartnerInviteListener();
-        closePartnerInviteModal();
         await auth?.signOut();
         showMessage('Signed out.', true);
       } catch (err) {
@@ -665,21 +597,57 @@
       }
     });
 
-    partnerInviteIgnoreBtn?.addEventListener('click', async () => {
-      const invite = activePartnerInvite;
-      closePartnerInviteModal();
-      if (!invite) return;
-      await setPartnerInviteStatus(invite, 'ignored');
-    });
 
-    partnerInviteJoinBtn?.addEventListener('click', async () => {
-      const invite = activePartnerInvite;
-      closePartnerInviteModal();
-      if (!invite?.gameId) return;
-      await setPartnerInviteStatus(invite, 'accepted');
-      window.GAME_ID = invite.gameId;
-      window.location.href = buildGameUrl(invite.gameId);
-    });
+    async function getOrCreateSession(user, profile) {
+      // 1. Reuse last known session if still alive in Firebase
+      const stored = localStorage.getItem('currentSessionId');
+      if (stored && db) {
+        try {
+          const snap = await db.ref(`sessions/${stored}/createdAt`).once('value');
+          if (snap.val()) return stored;
+        } catch (_) {}
+      }
+
+      // 2. Auto-join a pending invite from partner
+      const myEmail = normalizeEmail(user.email);
+      if (myEmail && db) {
+        try {
+          const snap = await db.ref('sessions')
+            .orderByChild('invite/targetEmail')
+            .equalTo(myEmail)
+            .limitToLast(5)
+            .once('value');
+          const all = snap.val() || {};
+          const candidate = Object.entries(all).find(([, s]) =>
+            s.invite?.status === 'pending' && s.invite.senderUid !== user.uid
+          );
+          if (candidate) {
+            const [inviteSessionId] = candidate;
+            // Auto-accept and join
+            await db.ref(`sessions/${inviteSessionId}/invite`).update({ status: 'accepted', respondedAt: Date.now(), respondedBy: user.uid });
+            await db.ref(`sessions/${inviteSessionId}/profiles/guest`).set({ uid: user.uid, displayName: profile.displayName || '', avatarDataUrl: profile.avatarDataUrl || '' });
+            localStorage.setItem('currentSessionId', inviteSessionId);
+            return inviteSessionId;
+          }
+        } catch (_) {}
+      }
+
+      // 3. Create a fresh session
+      const sessionId = randomGameId();
+      const partnerEmail = normalizeEmail(profile.reunionPartnerEmail || '');
+      const sessionData = {
+        createdBy: user.uid,
+        createdByEmail: user.email || '',
+        createdAt: Date.now(),
+        profiles: { host: { uid: user.uid, displayName: profile.displayName || '', avatarDataUrl: profile.avatarDataUrl || '' } }
+      };
+      if (partnerEmail && partnerEmail !== myEmail) {
+        sessionData.invite = { targetEmail: partnerEmail, senderUid: user.uid, senderEmail: user.email || '', senderName: profile.displayName || '', status: 'pending', createdAt: Date.now() };
+      }
+      if (db) await db.ref(`sessions/${sessionId}`).set(sessionData);
+      localStorage.setItem('currentSessionId', sessionId);
+      return sessionId;
+    }
 
     if (!auth) {
       window.GAME_ID = window.GAME_ID || gameIdFromUrl() || '';
@@ -689,14 +657,16 @@
 
     auth.onAuthStateChanged(async (user) => {
       window.currentUser = user || null;
-      const gameId = window.GAME_ID || gameIdFromUrl();
-      window.GAME_ID = gameId || '';
+      const gameId    = window.GAME_ID    || gameIdFromUrl();
+      const sessionId = window.SESSION_ID || sessionIdFromUrl();
+      window.GAME_ID    = gameId    || '';
+      window.SESSION_ID = sessionId || '';
 
       if (!user) {
         window.currentProfile = null;
         notifyProfileUpdated();
         stopPartnerInviteListener();
-        closePartnerInviteModal();
+        localStorage.removeItem('currentSessionId');
         showAuth();
         return;
       }
@@ -737,11 +707,49 @@
       window.currentProfile = profile;
       notifyProfileUpdated();
 
-      maybeShowPartnerInvite(user);
-      startPartnerInviteListener(user);
+      // ── Session mode (map) ────────────────────────────────────────────────
+      if (window.SESSION_ID) {
+        try {
+          const snap = await db.ref(`sessions/${window.SESSION_ID}`).once('value');
+          const session = snap.val() || {};
+          const isHost = session.createdBy === user.uid;
+          window.mySessionRole = isHost ? 'host' : 'guest';
 
+          if (!isHost) {
+            // Write guest profile into session
+            await db.ref(`sessions/${window.SESSION_ID}/profiles/guest`).set({
+              uid: user.uid,
+              displayName: profile.displayName || '',
+              avatarDataUrl: profile.avatarDataUrl || '',
+            });
+            // Accept the invite if pending
+            if (session.invite?.status === 'pending') {
+              await db.ref(`sessions/${window.SESSION_ID}/invite`).update({
+                status: 'accepted',
+                respondedAt: Date.now(),
+                respondedBy: user.uid,
+              });
+            }
+          }
+
+              // Load opponent profile (may already be there or arrive later)
+          const oppRole = window.mySessionRole === 'host' ? 'guest' : 'host';
+          const oppSnap = await db.ref(`sessions/${window.SESSION_ID}/profiles/${oppRole}`).once('value');
+          window.sessionOpponentProfile = oppSnap.val() || null;
+          // Remember this session for next login
+          localStorage.setItem('currentSessionId', window.SESSION_ID);
+        } catch (_) {}
+
+        showMessage('');
+        unlockApp();
+        return;
+      }
+
+      // ── Auto-session: skip lobby, go straight to map ─────────────────────
       if (!window.GAME_ID) {
-        showLobby(user);
+        showMessage('Loading map…', true);
+        const sid = await getOrCreateSession(user, profile);
+        window.location.href = buildSessionUrl(sid);
         return;
       }
       showMessage('');

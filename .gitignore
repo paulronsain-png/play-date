@@ -67,3 +67,10 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# Remi
+.remi/
+remi_log.md
+remi_memory.json
+codebase_map.json
+remi_updates.md

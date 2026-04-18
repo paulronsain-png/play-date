@@ -464,6 +464,50 @@ btn.addEventListener('click', e => {
   setTheme(currentTheme);
 });
 
+// ─── Session / Map boot ───────────────────────────────────────────────────────
+function bootMap() {
+  const mapView  = document.getElementById('map-view');
+  const gameMain = document.getElementById('game-main');
+  if (mapView)  mapView.classList.remove('hidden');
+  if (gameMain) gameMain.classList.add('hidden');
+
+  const tryInit = () => {
+    if (typeof window.initMap !== 'function') { setTimeout(tryInit, 80); return; }
+    window.initMap({
+      sid:    window.SESSION_ID,
+      role:   window.mySessionRole || 'host',
+      myProf: window.currentProfile  || null,
+      oppProf: window.sessionOpponentProfile || null,
+    });
+  };
+  tryInit();
+}
+
+window.bootGameFromSession = function (chessGameId) {
+  window.GAME_ID = chessGameId;
+  sessionStorage.removeItem('myColor');
+  gameBooted = false;
+  document.getElementById('btn-back-to-map')?.classList.remove('hidden');
+  bootGame();
+};
+
+// Show map button whenever we're in a session
+if (window.SESSION_ID) {
+  document.getElementById('btn-back-to-map')?.classList.remove('hidden');
+}
+
+document.getElementById('btn-back-to-map')?.addEventListener('click', () => {
+  window.returnToMap?.();
+});
+
+document.getElementById('map-exit-btn')?.addEventListener('click', () => {
+  // Clear session and return to lobby
+  if (typeof window.stopMap === 'function') window.stopMap();
+  window.SESSION_ID = '';
+  window.mySessionRole = null;
+  window.location.href = `${window.location.origin}${window.location.pathname}`;
+});
+
 // ─── Boot sequence ────────────────────────────────────────────────────────────
 let gameBooted = false;
 function bootGame() {
@@ -528,6 +572,10 @@ function bootGame() {
 
 (async function waitForAuthAndBoot() {
   if (window.appReadyPromise) await window.appReadyPromise;
+  if (window.SESSION_ID) {
+    bootMap();
+    return;
+  }
   bootGame();
 })();
 

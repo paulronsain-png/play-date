@@ -16,7 +16,18 @@
       "Bash(sed -i '' 's/game\\\\.js?v=30/game.js?v=31/' index.html)",
       "Bash(gh auth *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(python3 -c \"import os; dirs = os.listdir\\('.'\\); playdate = [d for d in dirs if 'play' in d.lower\\(\\)]; print\\(playdate\\)\")",
+      "Bash(pip show *)",
+      "Bash(python3 -m json.tool)",
+      "Bash(xattr -l \"/Users/paulronsain/Desktop/play date /codebase_map.json\")",
+      "Bash(xattr -l \"/Users/paulronsain/Desktop/play date /remi_updates.md\")",
+      "Bash(xattr -d com.apple.macl \"/Users/paulronsain/Desktop/play date /codebase_map.json\")",
+      "Bash(xattr -d com.apple.macl \"/Users/paulronsain/Desktop/play date /remi_updates.md\")",
+      "Bash(chmod 644 \"/Users/paulronsain/Desktop/play date /codebase_map.json\" \"/Users/paulronsain/Desktop/play date /remi_updates.md\")",
+      "Bash(pkill -f \"watcher.py\")",
+      "Bash(nohup python3 *)",
+      "Bash(echo \"Daemon restarted PID $!\")"
     ]
   }
 }

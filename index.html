@@ -80,10 +80,10 @@
       <div id="lobby-panel" class="hidden">
         <p class="lobby-user" id="lobby-user"></p>
         <div class="lobby-actions">
-          <button id="create-game-btn" class="auth-submit lobby-create" type="button">Create Game</button>
+          <button id="create-game-btn" class="auth-submit lobby-create" type="button">Explore Together</button>
           <div class="join-block">
-            <input id="join-link-input" class="auth-input" type="text" placeholder="Paste game link" />
-            <button id="join-game-btn" class="auth-submit" type="button">Join Game</button>
+            <input id="join-link-input" class="auth-input" type="text" placeholder="Paste session link" />
+            <button id="join-game-btn" class="auth-submit" type="button">Join Session</button>
           </div>
         </div>
         <button id="auth-logout-btn" class="auth-ghost-btn" type="button">Log Out</button>
@@ -866,7 +866,37 @@
     </div>
   </div>
 
-  <main>
+  <!-- ── Map View ─────────────────────────────────────────────────────────── -->
+  <div id="map-view" class="hidden">
+    <canvas id="map-canvas"></canvas>
+
+    <!-- Header bar -->
+    <div class="map-header">
+      <span class="map-title">🗺 Game Land</span>
+      <div class="map-header-right">
+        <button id="map-exit-btn" class="map-exit-btn" type="button">✕ Exit</button>
+      </div>
+    </div>
+
+    <!-- Mobile D-pad -->
+    <div class="map-mobile-controls">
+      <div id="map-dpad" class="map-dpad">
+        <div class="dpad-ring">
+          <span class="dpad-arrow dpad-up">▲</span>
+          <span class="dpad-arrow dpad-down">▼</span>
+          <span class="dpad-arrow dpad-left">◀</span>
+          <span class="dpad-arrow dpad-right">▶</span>
+          <div class="dpad-dot"></div>
+        </div>
+      </div>
+      <button id="map-enter-btn" class="map-enter-btn hidden" type="button">Enter</button>
+    </div>
+
+    <!-- Coming-soon toast -->
+    <div id="map-toast" class="map-toast hidden"></div>
+  </div>
+
+  <main id="game-main">
     <aside class="panel panel-left">
 
       <div class="player-card" id="card-black">
@@ -959,6 +989,7 @@
         <div class="controls">
           <button class="ctrl-btn primary" id="btn-new-game">New Game</button>
           <button class="ctrl-btn" id="btn-exit-game">Exit Game</button>
+          <button class="ctrl-btn btn-back-to-map hidden" id="btn-back-to-map" type="button">🗺 Map</button>
           <button class="ctrl-btn" id="btn-resign">⚑ Resign</button>
           <button class="ctrl-btn robot-btn" id="btn-ask-robot" aria-label="Ask Robot">
             <svg class="eve-face" viewBox="0 0 54 62" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" overflow="visible">
@@ -1202,7 +1233,7 @@
     <div class="modal partner-invite-modal">
       <div class="modal-icon">✉</div>
       <h2>Partner Invited You</h2>
-      <p id="partner-invite-msg">Your partner invited you to join a game.</p>
+      <p id="partner-invite-msg">Your partner invited you to explore together.</p>
       <div class="modal-buttons">
         <button class="ctrl-btn primary" id="partner-invite-join-btn" type="button">Join</button>
         <button class="ctrl-btn" id="partner-invite-ignore-btn" type="button">Ignore</button>
@@ -1229,10 +1260,12 @@
   firebase.initializeApp(firebaseConfig);
   window.auth = firebase.auth();
   window.db = firebase.database();
-  (function initGameIdFromUrl() {
+  (function initIds() {
     const params = new URLSearchParams(window.location.search);
     const gid = params.get('game');
-    window.GAME_ID = gid ? gid.trim() : '';
+    const sid = params.get('session');
+    window.GAME_ID    = gid ? gid.trim() : '';
+    window.SESSION_ID = sid ? sid.trim() : '';
   })();
 </script>
 
@@ -1246,6 +1279,7 @@
 <script src="main.js?v=42"></script>
 <script src="robot.js?v=23"></script>
 <script src="profile-menu.js?v=8"></script>
+<script src="map.js?v=1"></script>
 
 </body>
 </html>
