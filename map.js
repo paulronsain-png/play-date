@@ -800,6 +800,17 @@
     window.bootGameFromSession?.(chessGameId);
   }
 
+  function goPark(mode) {
+    stopMap();
+    document.getElementById('map-view')?.classList.add('hidden');
+    document.getElementById('park-view')?.classList.remove('hidden');
+    const tryInit = () => {
+      if (typeof window.initPark !== 'function') { setTimeout(tryInit, 80); return; }
+      window.initPark({ sid, role, myProf, oppProf, mode: mode || 'solo' });
+    };
+    tryInit();
+  }
+
   function goCasino(mode) {
     stopMap();
     document.getElementById('map-view')?.classList.add('hidden');
@@ -894,7 +905,9 @@
     const onJoin = () => {
       dismiss();
       window.db?.ref(`sessions/${sid}/nudge`).remove();
-      launchGame(buildingId, 'multi');
+      // Open game picker for the nudged building so user can pick a game
+      const bld = BUILDINGS.find(b => b.id === buildingId);
+      if (bld) showGamePicker(bld);
     };
     joinBtn.addEventListener('click', onJoin);
     dismissBtn.addEventListener('click', dismiss);
@@ -904,47 +917,96 @@
     banner._t = setTimeout(dismiss, 20000);
   }
 
+  // ── Building games config ─────────────────────────────────────────────────────
+  const BUILDING_GAMES = {
+    library: [
+      { id: 'chess',     label: 'Chess',     icon: '♟️',  ready: true  },
+      { id: 'connect4',  label: 'Connect 4', icon: '🔴',  ready: true  },
+      { id: 'mancala',   label: 'Mancala',   icon: '🟤',  ready: false },
+    ],
+    bar: [
+      { id: 'pool',  label: 'Pool',  icon: '🎱', ready: true  },
+      { id: 'darts', label: 'Darts', icon: '🎯', ready: false },
+    ],
+    casino: [
+      { id: 'blackjack', label: 'Blackjack', icon: '🃏', ready: true  },
+      { id: 'poker',     label: 'Poker',     icon: '♠️',  ready: false },
+    ],
+    park: [
+      { id: 'soccer', label: 'Slingshot Soccer', icon: '⚽', ready: true  },
+    ],
+    diner: [
+      { id: 'wrestling', label: 'Wrestling', icon: '🤼', ready: false },
+    ],
+  };
+
   // ── Mode select modal ─────────────────────────────────────────────────────────
   function enterBuilding(b) {
-    const minigames = ['library','bar','casino','park','diner','connect4'];
-    if (!minigames.includes(b.id)) { showComingSoon(b.name); return; }
-    if (b.id === 'library') { showLibraryPicker(); return; }
-    showModeSelect(b);
+    const hasGames = BUILDING_GAMES[b.id];
+    if (hasGames) {
+      showGamePicker(b);
+      return;
+    }
+    showComingSoon(b.name);
   }
 
-  function showLibraryPicker() {
-    const modal = document.getElementById('library-picker');
-    if (!modal) { showModeSelect(BUILDINGS.find(b => b.id === 'library')); return; }
-    modal.classList.remove('hidden');
-    document.getElementById('library-pick-chess')?.addEventListener('click', function onChess() {
-      this.removeEventListener('click', onChess);
-      modal.classList.add('hidden');
-      showModeSelect(Object.assign({}, BUILDINGS.find(b => b.id === 'library'), { _game: 'chess' }));
-    }, { once: true });
-    document.getElementById('library-pick-connect4')?.addEventListener('click', function onC4() {
-      this.removeEventListener('click', onC4);
-      modal.classList.add('hidden');
-      showModeSelect(Object.assign({}, BUILDINGS.find(b => b.id === 'library'), { _game: 'connect4', icon: '🔴', name: 'Connect 4' }));
-    }, { once: true });
-    document.getElementById('library-pick-cancel')?.addEventListener('click', function onCancel() {
-      this.removeEventListener('click', onCancel);
-      modal.classList.add('hidden');
-    }, { once: true });
-  }
-
-  function showModeSelect(b) {
+  function showGamePicker(b) {
     const modal      = document.getElementById('mode-select');
+    const gamePicker = document.getElementById('game-picker');
+    const modePicker = document.getElementById('mode-picker');
     const icon       = document.getElementById('mode-select-icon');
     const title      = document.getElementById('mode-select-title');
-    const status     = document.getElementById('partner-status');
-    const soloBtn    = document.getElementById('mode-solo-btn');
-    const partnerBtn = document.getElementById('mode-partner-btn');
-    const nudgeBtn   = document.getElementById('mode-nudge-btn');
-    const cancelBtn  = document.getElementById('mode-cancel-btn');
-    if (!modal) return;
+    const gameList   = document.getElementById('game-list');
+    const cancelBtn  = document.getElementById('game-cancel-btn');
+    if (!modal || !gamePicker || !gameList) return;
 
     icon.textContent  = b.icon;
     title.textContent = b.name;
+
+    // Populate game buttons
+    gameList.innerHTML = '';
+    const games = BUILDING_GAMES[b.id] || [];
+    games.forEach(game => {
+      const btn = document.createElement('button');
+      btn.style.cssText = `
+        padding:14px 24px; border-radius:10px; border:none; font-size:16px;
+        font-weight:bold; cursor:${game.ready ? 'pointer' : 'default'};
+        background:${game.ready ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)'};
+        color:${game.ready ? '#ffffff' : '#888888'};
+        transition:background 0.2s;
+      `;
+      btn.textContent = `${game.icon} ${game.label}${game.ready ? '' : '  (coming soon)'}`;
+      if (game.ready) {
+        btn.addEventListener('mouseenter', () => btn.style.background = 'rgba(255,215,0,0.25)');
+        btn.addEventListener('mouseleave', () => btn.style.background = 'rgba(255,255,255,0.15)');
+        btn.addEventListener('click', () => showModePicker(b, game));
+      }
+      gameList.appendChild(btn);
+    });
+
+    // Show game picker, hide mode picker
+    gamePicker.classList.remove('hidden');
+    modePicker.classList.add('hidden');
+    modal.classList.remove('hidden');
+
+    cancelBtn.onclick = () => modal.classList.add('hidden');
+  }
+
+  function showModePicker(b, game) {
+    const gamePicker  = document.getElementById('game-picker');
+    const modePicker  = document.getElementById('mode-picker');
+    const gameIcon    = document.getElementById('mode-game-icon');
+    const gameTitle   = document.getElementById('mode-game-title');
+    const status      = document.getElementById('partner-status');
+    const soloBtn     = document.getElementById('mode-solo-btn');
+    const partnerBtn  = document.getElementById('mode-partner-btn');
+    const nudgeBtn    = document.getElementById('mode-nudge-btn');
+    const cancelBtn   = document.getElementById('mode-cancel-btn');
+    const backBtn     = document.getElementById('mode-back-btn');
+    if (!modePicker) return;
+
+    gameIcon.textContent  = game.icon;
+    gameTitle.textContent = game.label;
 
     // Partner status
     if (partnerOnline) {
@@ -961,25 +1023,28 @@
       partnerBtn.style.pointerEvents = 'none';
     }
 
-    modal.classList.remove('hidden');
+    gamePicker.classList.add('hidden');
+    modePicker.classList.remove('hidden');
 
+    const modal = document.getElementById('mode-select');
     const cleanup = () => {
-      modal.classList.add('hidden');
+      modal?.classList.add('hidden');
       soloBtn.onclick = null;
       partnerBtn.onclick = null;
       nudgeBtn.onclick = null;
       cancelBtn.onclick = null;
+      backBtn.onclick = null;
     };
 
-    const gameId = b._game || b.id;
-    soloBtn.onclick = () => { cleanup(); launchGame(gameId, 'solo'); };
-    partnerBtn.onclick = () => { if (partnerOnline) { cleanup(); launchGame(gameId, 'multi'); } };
-    nudgeBtn.onclick = () => { sendNudge(b.id); };
+    backBtn.onclick   = () => { modePicker.classList.add('hidden'); gamePicker.classList.remove('hidden'); };
+    soloBtn.onclick   = () => { cleanup(); launchGame(game.id, b.id, 'solo'); };
+    partnerBtn.onclick = () => { if (partnerOnline) { cleanup(); launchGame(game.id, b.id, 'multi'); } };
+    nudgeBtn.onclick  = () => { sendNudge(b.id); };
     cancelBtn.onclick = cleanup;
   }
 
-  function launchGame(buildingId, mode) {
-    if (buildingId === 'library' || buildingId === 'chess') {
+  function launchGame(gameId, buildingId, mode) {
+    if (gameId === 'chess') {
       const db = window.db;
       if (!db || !sid) return;
       db.ref(`sessions/${sid}`).once('value', snap => {
@@ -990,10 +1055,11 @@
       });
       return;
     }
-    if (buildingId === 'bar')      { goBar(mode);      return; }
-    if (buildingId === 'casino')   { goCasino(mode);   return; }
-    if (buildingId === 'connect4') { goConnect4(mode); return; }
-    showComingSoon(buildingId);
+    if (gameId === 'pool')      { goBar(mode);      return; }
+    if (gameId === 'blackjack') { goCasino(mode);   return; }
+    if (gameId === 'soccer')    { goPark(mode);     return; }
+    if (gameId === 'connect4')  { goConnect4(mode); return; }
+    showComingSoon(`${gameId.charAt(0).toUpperCase() + gameId.slice(1)}`);
   }
 
   function showComingSoon(name) {
@@ -1182,16 +1248,17 @@
   };
 
   window.returnToMap = function () {
-    if (!sid) return;
     inChessAlready = false;
-    window.db?.ref(`sessions/${sid}`).update({ inChess: false });
+    if (sid) window.db?.ref(`sessions/${sid}`).update({ inChess: false });
     window.stopBar?.();
     window.stopCasino?.();
+    window.stopPark?.();
     window.stopConnect4?.();
     // Hide all game views, show map
     document.getElementById('game-main')?.classList.add('hidden');
     document.getElementById('bar-view')?.classList.add('hidden');
     document.getElementById('casino-view')?.classList.add('hidden');
+    document.getElementById('park-view')?.classList.add('hidden');
     document.getElementById('connect4-view')?.classList.add('hidden');
     document.getElementById('map-view')?.classList.remove('hidden');
     // Wait one frame so the canvas has real dimensions before initMap

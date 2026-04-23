@@ -9,7 +9,7 @@
 
   // ── State ─────────────────────────────────────────────────────────────────────
   let canvas, ctx;
-  let sid, myRole, oppRole;
+  let sid, myRole, oppRole, mode;
   let myProf, oppProf;
   let raf = null;
   let dbRef = null;
@@ -147,9 +147,32 @@
     if (myRole !== 'host') return;
     if (phase === 'player-host') {
       phase = 'player-guest';
-      pushState(buildState());
-      showToast('Guest\'s turn');
+      if (mode === 'solo') {
+        setTimeout(runGuestBot, 900);
+      } else {
+        pushState(buildState());
+        showToast('Guest\'s turn');
+      }
     } else if (phase === 'player-guest') {
+      runDealer();
+    }
+  }
+
+  // Bot plays the guest hand with basic strategy (hit < 17, stand ≥ 17)
+  function runGuestBot() {
+    if (mode !== 'solo' || phase !== 'player-guest') return;
+    const total = handTotalAll(hands.guest);
+    if (total < 17) {
+      hands.guest.push(popCard());
+      const newTotal = handTotalAll(hands.guest);
+      if (newTotal > 21) {
+        stood.guest = true;
+        runDealer();
+      } else {
+        setTimeout(runGuestBot, 700);
+      }
+    } else {
+      stood.guest = true;
       runDealer();
     }
   }
@@ -337,8 +360,9 @@
   }
 
   function drawScores(cw) {
-    const hostName  = myRole === 'host'  ? (myProf?.displayName  || 'Host')  : (oppProf?.displayName || 'Host');
-    const guestName = myRole === 'guest' ? (myProf?.displayName  || 'Guest') : (oppProf?.displayName || 'Guest');
+    const hostName  = myRole === 'host'  ? (myProf?.displayName  || 'You')   : (oppProf?.displayName || 'Host');
+    const guestName = mode === 'solo'    ? '🤖 Bot'
+                    : myRole === 'guest' ? (myProf?.displayName  || 'You')   : (oppProf?.displayName || 'Guest');
 
     ctx.fillStyle = 'rgba(0,0,0,0.45)';
     ctx.beginPath(); ctx.roundRect(cw/2 - 110, 8, 220, 32, 8); ctx.fill();
@@ -368,6 +392,14 @@
         ctx.font = '12px sans-serif';
         ctx.fillText('Waiting for host to deal…', cw/2, by + btnH + 18);
       }
+      return;
+    }
+
+    // Solo: bot handles guest turn — just show a label
+    if (mode === 'solo' && phase === 'player-guest') {
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.font = '15px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('🤖 Bot is playing…', cw / 2, ch - 44);
       return;
     }
 
@@ -439,8 +471,9 @@
     const hostCX   = cw * 0.27;
     const guestCX  = cw * 0.73;
 
-    const hostName  = myRole === 'host'  ? (myProf?.displayName  || 'You')     : (oppProf?.displayName || 'Host');
-    const guestName = myRole === 'guest' ? (myProf?.displayName  || 'You')     : (oppProf?.displayName || 'Guest');
+    const hostName  = myRole === 'host'  ? (myProf?.displayName  || 'You')   : (oppProf?.displayName || 'Host');
+    const guestName = mode === 'solo'    ? '🤖 Bot'
+                    : myRole === 'guest' ? (myProf?.displayName  || 'You')   : (oppProf?.displayName || 'Guest');
 
     // Dealer hand
     if (dealerHand.length) {
@@ -534,6 +567,7 @@
     oppRole = myRole === 'host' ? 'guest' : 'host';
     myProf  = opts.myProf;
     oppProf = opts.oppProf;
+    mode    = opts.mode || 'multi';
 
     canvas = document.getElementById('casino-canvas');
     if (!canvas) return;
@@ -552,8 +586,8 @@
       });
     }
 
-    listenCasino();
-    listenGuestActions();
+    if (mode !== 'solo') listenCasino();
+    if (mode !== 'solo') listenGuestActions();
 
     canvas.addEventListener('pointerdown', onPointer);
     canvas.addEventListener('touchstart',  onPointer, { passive: false });
