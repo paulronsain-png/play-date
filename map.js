@@ -39,6 +39,8 @@
   let joy = {on:false, dx:0, dy:0};
   let cam = {x:0, y:0};
   let inChessAlready = false;
+  let partnerOnline  = false;
+  let nudgeListener  = null;
 
   const clamp = (v,lo,hi) => v<lo?lo:v>hi?hi:v;
   const lerp  = (a,b,t)   => a + (b-a)*t;
@@ -325,7 +327,7 @@
     raf = requestAnimationFrame(tick);
   }
 
-  // ── Chess bridge ─────────────────────────────────────────────────────────────
+  // ── Building bridges ──────────────────────────────────────────────────────────
   function goChess(chessGameId) {
     if (inChessAlready) return;
     inChessAlready = true;
@@ -335,26 +337,184 @@
     window.bootGameFromSession?.(chessGameId);
   }
 
+  function goCasino(mode) {
+    stopMap();
+    document.getElementById('map-view')?.classList.add('hidden');
+    document.getElementById('casino-view')?.classList.remove('hidden');
+    const tryInit = () => {
+      if (typeof window.initCasino !== 'function') { setTimeout(tryInit, 80); return; }
+      window.initCasino({ sid, role, myProf, oppProf, mode: mode || 'multi' });
+    };
+    tryInit();
+  }
+
+  function goBar(mode) {
+    stopMap();
+    document.getElementById('map-view')?.classList.add('hidden');
+    document.getElementById('bar-view')?.classList.remove('hidden');
+    const tryInit = () => {
+      if (typeof window.initBar !== 'function') { setTimeout(tryInit, 80); return; }
+      window.initBar({ sid, role, myProf, oppProf, mode: mode || 'multi' });
+    };
+    tryInit();
+  }
+
+  // ── Presence tracking ─────────────────────────────────────────────────────────
+  let presenceReady = false;
+  function setupPresence() {
+    if (!window.db || !sid || !role || presenceReady) return;
+    presenceReady = true;
+    const presRef = window.db.ref(`sessions/${sid}/presence/${role}`);
+    window.db.ref('.info/connected').on('value', snap => {
+      if (!snap.val()) return;
+      presRef.set(true);
+      presRef.onDisconnect().remove();
+    });
+    const oppRole = role === 'host' ? 'guest' : 'host';
+    window.db.ref(`sessions/${sid}/presence/${oppRole}`).on('value', snap => {
+      partnerOnline = !!snap.val();
+    });
+  }
+
+  // ── Nudge system ──────────────────────────────────────────────────────────────
+  function setupNudgeListener() {
+    if (!window.db || !sid || nudgeListener) return;
+    nudgeListener = window.db.ref(`sessions/${sid}/nudge`);
+    nudgeListener.on('value', snap => {
+      const d = snap.val();
+      if (!d || d.to !== role) return;
+      if (Date.now() - d.t > 30000) return; // ignore old nudges
+      const bld = BUILDINGS.find(b => b.id === d.building);
+      if (!bld) return;
+      const senderName = oppProf?.displayName || 'Your partner';
+      showNudgeBanner(`${senderName} wants to play at the ${bld.name}!`, d.building);
+    });
+  }
+
+  function sendNudge(buildingId) {
+    if (!window.db || !sid) return;
+    window.db.ref(`sessions/${sid}/nudge`).set({
+      from: role,
+      to: role === 'host' ? 'guest' : 'host',
+      building: buildingId,
+      t: Date.now()
+    });
+    showToastMsg('Nudge sent! 👋');
+  }
+
+  function showNudgeBanner(text, buildingId) {
+    const banner   = document.getElementById('nudge-banner');
+    const bannerTxt = document.getElementById('nudge-banner-text');
+    const joinBtn  = document.getElementById('nudge-join-btn');
+    const dismissBtn = document.getElementById('nudge-dismiss-btn');
+    if (!banner) return;
+    bannerTxt.textContent = text;
+    banner.classList.remove('hidden');
+    banner.style.display = 'flex';
+
+    const dismiss = () => {
+      banner.classList.add('hidden');
+      joinBtn.removeEventListener('click', onJoin);
+      dismissBtn.removeEventListener('click', dismiss);
+    };
+    const onJoin = () => {
+      dismiss();
+      window.db?.ref(`sessions/${sid}/nudge`).remove();
+      launchGame(buildingId, 'multi');
+    };
+    joinBtn.addEventListener('click', onJoin);
+    dismissBtn.addEventListener('click', dismiss);
+
+    // Auto-dismiss after 20s
+    clearTimeout(banner._t);
+    banner._t = setTimeout(dismiss, 20000);
+  }
+
+  // ── Mode select modal ─────────────────────────────────────────────────────────
   function enterBuilding(b) {
-    if (b.id !== 'library') {
-      // Other buildings: show coming soon
-      showComingSoon(b.name);
+    const minigames = ['library','bar','casino','park','diner'];
+    if (minigames.includes(b.id)) {
+      showModeSelect(b);
       return;
     }
-    const db = window.db;
-    if (!db || !sid) return;
-    db.ref(`sessions/${sid}`).once('value', snap => {
-      const d = snap.val() || {};
-      const updates = { inChess: true };
-      if (!d.chessGameId) updates.chessGameId = rndId();
-      db.ref(`sessions/${sid}`).update(updates);
-    });
+    showComingSoon(b.name);
+  }
+
+  function showModeSelect(b) {
+    const modal      = document.getElementById('mode-select');
+    const icon       = document.getElementById('mode-select-icon');
+    const title      = document.getElementById('mode-select-title');
+    const status     = document.getElementById('partner-status');
+    const soloBtn    = document.getElementById('mode-solo-btn');
+    const partnerBtn = document.getElementById('mode-partner-btn');
+    const nudgeBtn   = document.getElementById('mode-nudge-btn');
+    const cancelBtn  = document.getElementById('mode-cancel-btn');
+    if (!modal) return;
+
+    icon.textContent  = b.icon;
+    title.textContent = b.name;
+
+    // Partner status
+    if (partnerOnline) {
+      status.textContent = '🟢 Partner is online';
+      status.style.color = '#60d080';
+      nudgeBtn.classList.add('hidden');
+      partnerBtn.style.opacity = '1';
+      partnerBtn.style.pointerEvents = 'auto';
+    } else {
+      status.textContent = '🔴 Partner is offline';
+      status.style.color = '#d06060';
+      nudgeBtn.classList.remove('hidden');
+      partnerBtn.style.opacity = '0.45';
+      partnerBtn.style.pointerEvents = 'none';
+    }
+
+    modal.classList.remove('hidden');
+
+    const cleanup = () => {
+      modal.classList.add('hidden');
+      soloBtn.onclick = null;
+      partnerBtn.onclick = null;
+      nudgeBtn.onclick = null;
+      cancelBtn.onclick = null;
+    };
+
+    soloBtn.onclick = () => { cleanup(); launchGame(b.id, 'solo'); };
+    partnerBtn.onclick = () => { if (partnerOnline) { cleanup(); launchGame(b.id, 'multi'); } };
+    nudgeBtn.onclick = () => { sendNudge(b.id); };
+    cancelBtn.onclick = cleanup;
+  }
+
+  function launchGame(buildingId, mode) {
+    if (buildingId === 'library') {
+      const db = window.db;
+      if (!db || !sid) return;
+      db.ref(`sessions/${sid}`).once('value', snap => {
+        const d = snap.val() || {};
+        const updates = { inChess: true };
+        if (!d.chessGameId) updates.chessGameId = rndId();
+        db.ref(`sessions/${sid}`).update(updates);
+      });
+      return;
+    }
+    if (buildingId === 'bar')    { goBar(mode);    return; }
+    if (buildingId === 'casino') { goCasino(mode); return; }
+    showComingSoon(buildingId);
   }
 
   function showComingSoon(name) {
     const el = document.getElementById('map-toast');
     if (!el) return;
     el.textContent = `${name} — coming soon!`;
+    el.classList.remove('hidden');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.add('hidden'), 2200);
+  }
+
+  function showToastMsg(msg) {
+    const el = document.getElementById('map-toast');
+    if (!el) return;
+    el.textContent = msg;
     el.classList.remove('hidden');
     clearTimeout(el._t);
     el._t = setTimeout(() => el.classList.add('hidden'), 2200);
@@ -368,7 +528,10 @@
     }
   }
 
+  let joystickReady = false;
   function setupJoystick() {
+    if (joystickReady) return;
+    joystickReady = true;
     const pad = document.getElementById('map-dpad');
     if (!pad) return;
     let cx = 0, cy = 0;
@@ -398,8 +561,8 @@
 
   function resize() {
     if (!canvas) return;
-    canvas.width  = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
+    canvas.width  = canvas.clientWidth  || window.innerWidth;
+    canvas.height = canvas.clientHeight || window.innerHeight;
   }
 
   function rndId() {
@@ -413,6 +576,7 @@
     document.removeEventListener('keydown', onKey);
     document.removeEventListener('keyup',   onKey);
     window.removeEventListener('resize', resize);
+    keys = {};
     if (sid) {
       const oppRole = role === 'host' ? 'guest' : 'host';
       window.db?.ref(`sessions/${sid}/players/${oppRole}`).off();
@@ -443,18 +607,76 @@
     document.addEventListener('keyup',   onKey);
     setupJoystick();
     listenSession();
+    setupPresence();
+    setupNudgeListener();
     lastTs = performance.now();
     raf = requestAnimationFrame(tick);
   };
 
   window.stopMap = stopMap;
 
+  // ── Map Preview (login background) ───────────────────────────────────────────
+  window.startMapPreview = function (previewCanvas) {
+    if (!previewCanvas) return;
+    const pc = previewCanvas;
+    const px = pc.getContext('2d');
+    let praf = null;
+    let panX = 200, panY = 50;
+    const PAN_SPEED = 0.25;
+
+    function resizePreview() {
+      pc.width  = pc.offsetWidth  || window.innerWidth;
+      pc.height = pc.offsetHeight || window.innerHeight;
+    }
+
+    function tickPreview() {
+      resizePreview();
+      const cw = pc.width, ch = pc.height;
+      panX += PAN_SPEED;
+      if (panX > W - cw) panX = 0;
+
+      px.clearRect(0, 0, cw, ch);
+      px.save();
+      px.translate(-Math.round(panX), -Math.round(panY));
+
+      // reuse draw functions with preview context swap
+      const origCtx = ctx;
+      ctx = px;
+      drawGrass();
+      drawRoads();
+      drawTrees();
+      drawBuildings();
+      ctx = origCtx;
+
+      px.restore();
+      praf = requestAnimationFrame(tickPreview);
+    }
+
+    resizePreview();
+    praf = requestAnimationFrame(tickPreview);
+
+    window.stopMapPreview = function () {
+      if (praf) cancelAnimationFrame(praf);
+      praf = null;
+      pc.style.display = 'none';
+    };
+  };
+
   window.returnToMap = function () {
     if (!sid) return;
     inChessAlready = false;
     window.db?.ref(`sessions/${sid}`).update({ inChess: false });
+    window.stopBar?.();
+    window.stopCasino?.();
+    // Hide all game views, show map
     document.getElementById('game-main')?.classList.add('hidden');
+    document.getElementById('bar-view')?.classList.add('hidden');
+    document.getElementById('casino-view')?.classList.add('hidden');
     document.getElementById('map-view')?.classList.remove('hidden');
-    window.initMap({ sid, role, myProf, oppProf });
+    // Wait one frame so the canvas has real dimensions before initMap
+    requestAnimationFrame(() => {
+      window.initMap({ sid, role, myProf, oppProf });
+    });
   };
 })();
+

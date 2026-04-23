@@ -2666,26 +2666,45 @@ html:has(body.cream-mode) { background: #e7f5ff; }
 }
 
 /* ── Auth gate / lobby ─────────────────────────────────────────────────────── */
+body.auth-locked {
+  overflow: hidden;
+  height: 100dvh;
+  max-height: 100dvh;
+}
+
+html:has(body.auth-locked) {
+  overflow: hidden;
+  height: 100dvh;
+  max-height: 100dvh;
+}
+
 body.auth-locked .top-bar,
 body.auth-locked main,
 body.auth-locked .chat-fab,
-body.auth-locked .chat-panel {
+body.auth-locked .chat-panel,
+body.auth-locked #map-view,
+body.auth-locked #game-main,
+body.auth-locked #bar-view {
   pointer-events: none;
-  filter: blur(3px);
-  user-select: none;
+  visibility: hidden;
 }
 
 .auth-gate {
   position: fixed;
-  inset: 0;
-  z-index: 2500;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: radial-gradient(circle at 50% 0%, rgba(146, 198, 255, 0.12) 0%, rgba(8, 14, 24, 0.82) 60%, rgba(6, 10, 18, 0.92) 100%);
-  backdrop-filter: blur(14px) saturate(1.25);
-  -webkit-backdrop-filter: blur(14px) saturate(1.25);
+  background: #1a2e1f;
+  transition: opacity 0.4s ease;
+}
+
+.auth-gate.fading-out {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .auth-card {
@@ -2695,7 +2714,7 @@ body.auth-locked .chat-panel {
   border-radius: 26px;
   padding: 24px 22px 20px;
   border: 1px solid rgba(197, 228, 255, 0.25);
-  background: linear-gradient(165deg, rgba(23, 38, 62, 0.84) 0%, rgba(11, 22, 38, 0.86) 62%, rgba(8, 17, 30, 0.9) 100%);
+  background: linear-gradient(165deg, rgba(23, 38, 62, 0.97) 0%, rgba(11, 22, 38, 0.97) 62%, rgba(8, 17, 30, 0.98) 100%);
   box-shadow:
     0 24px 60px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(232, 246, 255, 0.22);

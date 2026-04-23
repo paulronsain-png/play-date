@@ -3,26 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>ChessTime</title>
+  <title>Playdate</title>
   <link rel="icon" type="image/png" href="icon.png" />
   <link rel="apple-touch-icon" href="icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="ChessTime" />
+  <meta name="apple-mobile-web-app-title" content="Playdate" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=167" />
 </head>
 <body class="library-mode">
-<div id="auth-gate" class="auth-gate hidden" aria-live="polite">
+<div id="auth-gate" class="auth-gate" aria-live="polite">
     <div class="auth-card">
       <div class="auth-logo-wrap">
-        <img src="icon.png" alt="ChessTime logo" class="auth-logo">
+        <img src="icon.png" alt="Playdate logo" class="auth-logo">
       </div>
-      <h1 class="auth-title">ChessTime</h1>
-      <p class="auth-subtitle">Private games for signed-in players</p>
+      <h1 class="auth-title">Playdate</h1>
+      <p class="auth-subtitle">Your world, together</p>
 
-      <div id="auth-panel">
+      <div id="auth-panel" class="hidden">
         <div class="auth-tabs">
           <button id="auth-tab-login" class="auth-tab active" type="button">Log In</button>
           <button id="auth-tab-signup" class="auth-tab" type="button">Sign Up</button>
@@ -34,6 +34,7 @@
           <label class="auth-label" for="login-password">Password</label>
           <input id="login-password" class="auth-input" type="password" autocomplete="current-password" required />
           <button id="login-submit" class="auth-submit" type="submit">Log In</button>
+          <button id="forgot-password-btn" class="auth-ghost-btn" type="button" style="margin-top:6px;font-size:12px;opacity:0.7;">Forgot password?</button>
         </form>
 
         <form id="signup-form" class="auth-form hidden">
@@ -95,8 +96,8 @@
 
   <div class="bg-texture"></div>
 
-  <!-- Library mode background scene -->
-  <div id="library-bg" aria-hidden="true">
+  <!-- Library mode background scene (hidden — replaced by map preview) -->
+  <div id="library-bg" aria-hidden="true" style="display:none;">
     <svg id="library-svg" viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
       <defs>
         <!-- Sky gradient: deep night blue -->
@@ -896,6 +897,38 @@
     <div id="map-toast" class="map-toast hidden"></div>
   </div>
 
+  <!-- Game mode select modal -->
+  <div id="mode-select" class="hidden" style="position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.72);">
+    <div style="background:#1a2030;border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:32px 28px 24px;width:min(360px,92vw);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+      <div id="mode-select-icon" style="font-size:40px;margin-bottom:6px;">🎮</div>
+      <h2 id="mode-select-title" style="color:#fff;font-size:22px;margin:0 0 4px;">Building</h2>
+      <div id="partner-status" style="font-size:13px;color:#888;margin-bottom:24px;">Checking partner…</div>
+
+      <button id="mode-solo-btn" style="width:100%;padding:14px;margin-bottom:10px;background:#2a4a7a;border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:bold;cursor:pointer;">🎮 Solo Play</button>
+      <button id="mode-partner-btn" style="width:100%;padding:14px;margin-bottom:10px;background:#2a6a3a;border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:bold;cursor:pointer;">👫 Play with Partner</button>
+      <button id="mode-nudge-btn" class="hidden" style="width:100%;padding:10px;margin-bottom:10px;background:#6a3a20;border:none;border-radius:12px;color:#ffd080;font-size:14px;cursor:pointer;">👋 Nudge Partner to Join</button>
+      <button id="mode-cancel-btn" style="width:100%;padding:8px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:#888;font-size:13px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Nudge notification banner -->
+  <div id="nudge-banner" class="hidden" style="position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:600;background:#2a1a05;border:1px solid #c8a040;border-radius:14px;padding:14px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 32px rgba(0,0,0,0.6);min-width:280px;">
+    <span id="nudge-banner-text" style="color:#fff;font-size:14px;flex:1;"></span>
+    <button id="nudge-join-btn" style="background:#c8a040;border:none;border-radius:8px;color:#1a0a05;font-weight:bold;padding:8px 16px;cursor:pointer;font-size:13px;">Join!</button>
+    <button id="nudge-dismiss-btn" style="background:transparent;border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#888;padding:8px 12px;cursor:pointer;font-size:12px;">Later</button>
+  </div>
+
+  <!-- Casino (Blackjack) view -->
+  <div id="casino-view" class="hidden" style="position:fixed;inset:0;background:#1a0a05;z-index:100;">
+    <canvas id="casino-canvas" style="width:100%;height:100%;display:block;"></canvas>
+  </div>
+
+  <!-- Bar (Pool) view -->
+  <div id="bar-view" class="hidden" style="position:fixed;inset:0;background:#111;z-index:100;">
+    <canvas id="bar-canvas" style="width:100%;height:100%;display:block;"></canvas>
+    <button onclick="window.returnToMap?.()" style="position:absolute;top:12px;left:12px;background:rgba(0,0,0,0.6);color:#aaa;border:1px solid #444;padding:6px 14px;border-radius:6px;cursor:pointer;font:13px monospace;">← Map</button>
+  </div>
+
   <main id="game-main">
     <aside class="panel panel-left">
 
@@ -988,8 +1021,7 @@
 
         <div class="controls">
           <button class="ctrl-btn primary" id="btn-new-game">New Game</button>
-          <button class="ctrl-btn" id="btn-exit-game">Exit Game</button>
-          <button class="ctrl-btn btn-back-to-map hidden" id="btn-back-to-map" type="button">🗺 Map</button>
+          <button class="ctrl-btn btn-back-to-map" id="btn-back-to-map" type="button">← Map</button>
           <button class="ctrl-btn" id="btn-resign">⚑ Resign</button>
           <button class="ctrl-btn robot-btn" id="btn-ask-robot" aria-label="Ask Robot">
             <svg class="eve-face" viewBox="0 0 54 62" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" overflow="visible">
@@ -1269,17 +1301,19 @@
   })();
 </script>
 
-<script src="auth.js?v=14"></script>
+<script src="auth.js?v=15"></script>
 <script src="pieces.js?v=8"></script>
 <script src="chat.js?v=5"></script>
 <script src="webrtc.js?v=12"></script>
 <script src="fluid-bg.js?v=5"></script>
 <script src="board.js?v=8"></script>
 <script src="game.js?v=31"></script>
-<script src="main.js?v=42"></script>
+<script src="main.js?v=44"></script>
 <script src="robot.js?v=23"></script>
 <script src="profile-menu.js?v=8"></script>
-<script src="map.js?v=1"></script>
+<script src="map.js?v=7"></script>
+<script src="bar.js?v=1"></script>
+<script src="casino.js?v=1"></script>
 
 </body>
 </html>

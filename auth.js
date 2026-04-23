@@ -311,12 +311,21 @@
 
     function lockApp() {
       document.body.classList.add('auth-locked');
+      document.documentElement.style.overflow = 'hidden';
+      document.documentElement.style.height = '100dvh';
       gate?.classList.remove('hidden');
     }
 
     function unlockApp() {
       document.body.classList.remove('auth-locked');
-      gate?.classList.add('hidden');
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.height = '';
+      gate?.classList.add('fading-out');
+      setTimeout(() => {
+        gate?.classList.add('hidden');
+        gate?.classList.remove('fading-out');
+        window.stopMapPreview?.();
+      }, 420);
       resolveReady();
     }
 
@@ -385,6 +394,24 @@
         setPreviewImage(profileAvatarPreview, profileName?.value || 'Player', dataUrl || '');
       } catch {
         setPreviewImage(profileAvatarPreview, profileName?.value || 'Player', '');
+      }
+    });
+
+    byId('forgot-password-btn')?.addEventListener('click', async () => {
+      const email = loginEmail?.value.trim();
+      if (!email) {
+        showMessage('Enter your email address first, then click Forgot password.');
+        return;
+      }
+      const btn = byId('forgot-password-btn');
+      try {
+        if (btn) btn.textContent = 'Sending...';
+        await auth.sendPasswordResetEmail(email);
+        showMessage('Password reset email sent — check your inbox.', true);
+      } catch (err) {
+        showMessage(friendlyAuthError(err));
+      } finally {
+        if (btn) btn.textContent = 'Forgot password?';
       }
     });
 

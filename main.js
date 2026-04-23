@@ -228,21 +228,6 @@ document.getElementById('btn-new-game').addEventListener('click', () => {
 document.getElementById('modal-new').addEventListener('click', startNewGame);
 document.getElementById('modal-close').addEventListener('click', hideModal);
 
-document.getElementById('btn-exit-game').addEventListener('click', async () => {
-  const db = window.db;
-  const user = window.currentUser;
-  const gameId = String(window.GAME_ID || '').trim();
-  const color = typeof getMyColor === 'function' ? getMyColor() : null;
-  if (!gameId) return;
-  try {
-    if (db && user?.uid && color) {
-      await db.ref(`games/${gameId}/seats/${color}`).remove();
-    }
-  } catch (_) {}
-  sessionStorage.removeItem('myColor');
-  window.GAME_ID = '';
-  window.location.href = `${window.location.origin}${window.location.pathname}`;
-});
 
 document.getElementById('btn-resign').addEventListener('click', () => {
   if (!state || state.gameOver) return;
@@ -487,13 +472,11 @@ window.bootGameFromSession = function (chessGameId) {
   window.GAME_ID = chessGameId;
   sessionStorage.removeItem('myColor');
   gameBooted = false;
-  document.getElementById('btn-back-to-map')?.classList.remove('hidden');
   bootGame();
 };
 
 // Show map button whenever we're in a session
 if (window.SESSION_ID) {
-  document.getElementById('btn-back-to-map')?.classList.remove('hidden');
 }
 
 document.getElementById('btn-back-to-map')?.addEventListener('click', () => {
