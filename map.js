@@ -337,6 +337,17 @@
     window.bootGameFromSession?.(chessGameId);
   }
 
+  function goPark(mode) {
+    stopMap();
+    document.getElementById('map-view')?.classList.add('hidden');
+    document.getElementById('park-view')?.classList.remove('hidden');
+    const tryInit = () => {
+      if (typeof window.initPark !== 'function') { setTimeout(tryInit, 80); return; }
+      window.initPark({ sid, role, myProf, oppProf, mode: mode || 'solo' });
+    };
+    tryInit();
+  }
+
   function goCasino(mode) {
     stopMap();
     document.getElementById('map-view')?.classList.add('hidden');
@@ -448,7 +459,7 @@
       { id: 'poker',     label: 'Poker',     icon: '♠️',  ready: false },
     ],
     park: [
-      { id: 'basketball', label: 'Basketball', icon: '🏀', ready: false },
+      { id: 'soccer', label: 'Slingshot Soccer', icon: '⚽', ready: true  },
     ],
     diner: [
       { id: 'wrestling', label: 'Wrestling', icon: '🤼', ready: false },
@@ -572,6 +583,7 @@
     }
     if (gameId === 'pool')      { goBar(mode);    return; }
     if (gameId === 'blackjack') { goCasino(mode); return; }
+    if (gameId === 'soccer')    { goPark(mode);   return; }
     showComingSoon(`${gameId.charAt(0).toUpperCase() + gameId.slice(1)}`);
   }
 
@@ -741,10 +753,12 @@
     window.db?.ref(`sessions/${sid}`).update({ inChess: false });
     window.stopBar?.();
     window.stopCasino?.();
+    window.stopPark?.();
     // Hide all game views, show map
     document.getElementById('game-main')?.classList.add('hidden');
     document.getElementById('bar-view')?.classList.add('hidden');
     document.getElementById('casino-view')?.classList.add('hidden');
+    document.getElementById('park-view')?.classList.add('hidden');
     document.getElementById('map-view')?.classList.remove('hidden');
     // Wait one frame so the canvas has real dimensions before initMap
     requestAnimationFrame(() => {
