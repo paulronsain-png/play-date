@@ -897,17 +897,30 @@
     <div id="map-toast" class="map-toast hidden"></div>
   </div>
 
-  <!-- Game mode select modal -->
+  <!-- Building entry modal (step 1: game picker, step 2: mode picker) -->
   <div id="mode-select" class="hidden" style="position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.72);">
-    <div style="background:#1a2030;border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:32px 28px 24px;width:min(360px,92vw);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
-      <div id="mode-select-icon" style="font-size:40px;margin-bottom:6px;">🎮</div>
-      <h2 id="mode-select-title" style="color:#fff;font-size:22px;margin:0 0 4px;">Building</h2>
-      <div id="partner-status" style="font-size:13px;color:#888;margin-bottom:24px;">Checking partner…</div>
+    <div style="background:#1a2030;border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:28px 24px 20px;width:min(380px,94vw);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
 
-      <button id="mode-solo-btn" style="width:100%;padding:14px;margin-bottom:10px;background:#2a4a7a;border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:bold;cursor:pointer;">🎮 Solo Play</button>
-      <button id="mode-partner-btn" style="width:100%;padding:14px;margin-bottom:10px;background:#2a6a3a;border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:bold;cursor:pointer;">👫 Play with Partner</button>
-      <button id="mode-nudge-btn" class="hidden" style="width:100%;padding:10px;margin-bottom:10px;background:#6a3a20;border:none;border-radius:12px;color:#ffd080;font-size:14px;cursor:pointer;">👋 Nudge Partner to Join</button>
-      <button id="mode-cancel-btn" style="width:100%;padding:8px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:#888;font-size:13px;cursor:pointer;">Cancel</button>
+      <!-- Step 1: game picker -->
+      <div id="game-picker">
+        <div id="mode-select-icon" style="font-size:38px;margin-bottom:4px;">🎮</div>
+        <h2 id="mode-select-title" style="color:#fff;font-size:20px;margin:0 0 16px;">Building</h2>
+        <div id="game-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
+        <button id="game-cancel-btn" style="width:100%;padding:8px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:#888;font-size:13px;cursor:pointer;">Cancel</button>
+      </div>
+
+      <!-- Step 2: mode picker -->
+      <div id="mode-picker" class="hidden">
+        <button id="mode-back-btn" style="background:transparent;border:none;color:#888;font-size:13px;cursor:pointer;margin-bottom:8px;">← Back</button>
+        <div id="mode-game-icon" style="font-size:34px;margin-bottom:4px;">🎮</div>
+        <h2 id="mode-game-title" style="color:#fff;font-size:20px;margin:0 0 4px;"></h2>
+        <div id="partner-status" style="font-size:13px;color:#888;margin-bottom:20px;">Checking partner…</div>
+        <button id="mode-solo-btn" style="width:100%;padding:13px;margin-bottom:10px;background:#2a4a7a;border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:bold;cursor:pointer;">🎮 Solo Play</button>
+        <button id="mode-partner-btn" style="width:100%;padding:13px;margin-bottom:10px;background:#2a6a3a;border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:bold;cursor:pointer;">👫 Play with Partner</button>
+        <button id="mode-nudge-btn" class="hidden" style="width:100%;padding:10px;margin-bottom:10px;background:#6a3a20;border:none;border-radius:12px;color:#ffd080;font-size:13px;cursor:pointer;">👋 Nudge Partner to Join</button>
+        <button id="mode-cancel-btn" style="width:100%;padding:8px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:#888;font-size:13px;cursor:pointer;">Cancel</button>
+      </div>
+
     </div>
   </div>
 
@@ -1311,7 +1324,7 @@
 <script src="main.js?v=44"></script>
 <script src="robot.js?v=23"></script>
 <script src="profile-menu.js?v=8"></script>
-<script src="map.js?v=7"></script>
+<script src="map.js?v=8"></script>
 <script src="bar.js?v=1"></script>
 <script src="casino.js?v=1"></script>
 
