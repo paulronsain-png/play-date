@@ -472,11 +472,15 @@ window.bootGameFromSession = function (chessGameId) {
   window.GAME_ID = chessGameId;
   sessionStorage.removeItem('myColor');
   gameBooted = false;
+  const mapBtn = document.getElementById('btn-back-to-map');
+  if (mapBtn) mapBtn.style.display = 'inline-block';
   bootGame();
 };
 
 // Show map button whenever we're in a session
 if (window.SESSION_ID) {
+  const mapBtn = document.getElementById('btn-back-to-map');
+  if (mapBtn) mapBtn.style.display = 'inline-block';
 }
 
 document.getElementById('btn-back-to-map')?.addEventListener('click', () => {
