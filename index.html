@@ -847,6 +847,60 @@
             <img id="profile-menu-avatar-preview" class="profile-edit-avatar-preview" alt="Avatar preview" />
             <input id="profile-menu-avatar-input" class="auth-file-input" type="file" accept="image/*" />
           </div>
+          <label class="profile-edit-label">Map Character</label>
+          <div style="background:#0e1420;border-radius:12px;padding:12px;margin-bottom:10px;">
+            <canvas id="avatar-preview-canvas" width="80" height="100" style="display:block;margin:0 auto 10px;background:#1a2a1a;border-radius:8px;"></canvas>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;color:#aaa;">
+              <div>
+                <div style="margin-bottom:4px;">Skin</div>
+                <div id="avatar-skin-swatches" style="display:flex;gap:4px;flex-wrap:wrap;">
+                  <button class="av-swatch" data-key="skin" data-val="#f5c99a" style="background:#f5c99a;"></button>
+                  <button class="av-swatch" data-key="skin" data-val="#e8a870" style="background:#e8a870;"></button>
+                  <button class="av-swatch" data-key="skin" data-val="#c07840" style="background:#c07840;"></button>
+                  <button class="av-swatch" data-key="skin" data-val="#8a4820" style="background:#8a4820;"></button>
+                  <button class="av-swatch" data-key="skin" data-val="#5a2810" style="background:#5a2810;"></button>
+                </div>
+              </div>
+              <div>
+                <div style="margin-bottom:4px;">Hair</div>
+                <div id="avatar-hair-swatches" style="display:flex;gap:4px;flex-wrap:wrap;">
+                  <button class="av-swatch" data-key="hair" data-val="#1a0808" style="background:#1a0808;"></button>
+                  <button class="av-swatch" data-key="hair" data-val="#5a2808" style="background:#5a2808;"></button>
+                  <button class="av-swatch" data-key="hair" data-val="#c89040" style="background:#c89040;"></button>
+                  <button class="av-swatch" data-key="hair" data-val="#cc4020" style="background:#cc4020;"></button>
+                  <button class="av-swatch" data-key="hair" data-val="#2244aa" style="background:#2244aa;"></button>
+                  <button class="av-swatch" data-key="hair" data-val="#aaaaaa" style="background:#aaaaaa;"></button>
+                </div>
+              </div>
+              <div>
+                <div style="margin-bottom:4px;">Shirt</div>
+                <div id="avatar-top-swatches" style="display:flex;gap:4px;flex-wrap:wrap;">
+                  <button class="av-swatch" data-key="top" data-val="#2a5caa" style="background:#2a5caa;"></button>
+                  <button class="av-swatch" data-key="top" data-val="#aa2a2a" style="background:#aa2a2a;"></button>
+                  <button class="av-swatch" data-key="top" data-val="#2a8a40" style="background:#2a8a40;"></button>
+                  <button class="av-swatch" data-key="top" data-val="#8a2a8a" style="background:#8a2a8a;"></button>
+                  <button class="av-swatch" data-key="top" data-val="#d08020" style="background:#d08020;"></button>
+                  <button class="av-swatch" data-key="top" data-val="#555555" style="background:#555555;"></button>
+                </div>
+              </div>
+              <div>
+                <div style="margin-bottom:4px;">Pants</div>
+                <div id="avatar-bot-swatches" style="display:flex;gap:4px;flex-wrap:wrap;">
+                  <button class="av-swatch" data-key="bot" data-val="#1a2a50" style="background:#1a2a50;"></button>
+                  <button class="av-swatch" data-key="bot" data-val="#181818" style="background:#181818;"></button>
+                  <button class="av-swatch" data-key="bot" data-val="#8a6a30" style="background:#8a6a30;"></button>
+                  <button class="av-swatch" data-key="bot" data-val="#505060" style="background:#505060;"></button>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:8px;font-size:12px;color:#aaa;">Hat</div>
+            <div style="display:flex;gap:6px;margin-top:4px;">
+              <button class="av-hat-btn" data-hat="none" style="flex:1;padding:5px;background:#1e2a3a;border:1px solid #334;border-radius:6px;color:#aaa;font-size:12px;cursor:pointer;">None</button>
+              <button class="av-hat-btn" data-hat="cap" data-hatcolor="#cc2020" style="flex:1;padding:5px;background:#1e2a3a;border:1px solid #334;border-radius:6px;color:#aaa;font-size:12px;cursor:pointer;">🧢 Cap</button>
+              <button class="av-hat-btn" data-hat="beanie" data-hatcolor="#2244aa" style="flex:1;padding:5px;background:#1e2a3a;border:1px solid #334;border-radius:6px;color:#aaa;font-size:12px;cursor:pointer;">🎿 Beanie</button>
+            </div>
+          </div>
+
           <label class="profile-edit-label" for="profile-menu-partner-email">Partner Email</label>
           <input id="profile-menu-partner-email" class="profile-edit-input" type="email" autocomplete="email" placeholder="partner@email.com" />
           <label class="profile-edit-label" for="profile-menu-reunion-at">Reunion Date & Time</label>
@@ -897,6 +951,22 @@
     <div id="map-toast" class="map-toast hidden"></div>
   </div>
 
+  <!-- Library game picker modal -->
+  <div id="library-picker" class="hidden" style="position:fixed;inset:0;z-index:501;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.72);">
+    <div style="background:#1a1e2c;border:1px solid rgba(200,160,64,0.35);border-radius:20px;padding:32px 28px 24px;width:min(340px,92vw);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+      <div style="font-size:36px;margin-bottom:8px;">📚</div>
+      <h2 style="color:#fff;font-size:20px;margin:0 0 6px;">Library</h2>
+      <p style="color:#888;font-size:13px;margin:0 0 24px;">What would you like to play?</p>
+      <button id="library-pick-chess" style="width:100%;padding:16px;margin-bottom:10px;background:#2a4a7a;border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:12px;justify-content:center;">
+        <span style="font-size:24px;">♟️</span> Chess
+      </button>
+      <button id="library-pick-connect4" style="width:100%;padding:16px;margin-bottom:16px;background:#2a1a5a;border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:12px;justify-content:center;">
+        <span style="font-size:24px;">🔴</span> Connect 4
+      </button>
+      <button id="library-pick-cancel" style="width:100%;padding:8px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:#888;font-size:13px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+
   <!-- Game mode select modal -->
   <div id="mode-select" class="hidden" style="position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.72);">
     <div style="background:#1a2030;border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:32px 28px 24px;width:min(360px,92vw);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
@@ -921,6 +991,11 @@
   <!-- Casino (Blackjack) view -->
   <div id="casino-view" class="hidden" style="position:fixed;inset:0;background:#1a0a05;z-index:100;">
     <canvas id="casino-canvas" style="width:100%;height:100%;display:block;"></canvas>
+  </div>
+
+  <!-- Arcade (Connect 4) view -->
+  <div id="connect4-view" class="hidden" style="position:fixed;inset:0;background:#0a0a1a;z-index:100;">
+    <canvas id="connect4-canvas" style="width:100%;height:100%;display:block;"></canvas>
   </div>
 
   <!-- Bar (Pool) view -->
@@ -1310,10 +1385,11 @@
 <script src="game.js?v=31"></script>
 <script src="main.js?v=44"></script>
 <script src="robot.js?v=23"></script>
-<script src="profile-menu.js?v=8"></script>
-<script src="map.js?v=7"></script>
+<script src="profile-menu.js?v=9"></script>
+<script src="map.js?v=8"></script>
 <script src="bar.js?v=1"></script>
 <script src="casino.js?v=1"></script>
+<script src="connect4.js?v=1"></script>
 
 </body>
 </html>

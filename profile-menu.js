@@ -108,6 +108,7 @@
     menu.classList.remove('hidden');
     btn.setAttribute('aria-expanded', 'true');
     hydrateProfileUI();
+    initAvatarCreator();
     loadHistory();
   }
 
@@ -189,6 +190,118 @@
       historyList.appendChild(errorLine);
       console.warn('History load failed:', err);
     }
+  }
+
+  // ── Avatar creator ────────────────────────────────────────────────────────────
+  let avatarCfg = { skin:'#f5c99a', hair:'#3a1a08', top:'#2a5caa', bot:'#1a2a50', hat:'none', hatColor:'#cc2020' };
+  let avatarRaf = null;
+  let avatarListenersAdded = false;
+
+  function drawAvatarToCanvas(canvas, cfg, swing) {
+    const ctx = canvas.getContext('2d');
+    const cw = canvas.width, ch = canvas.height;
+    ctx.clearRect(0, 0, cw, ch);
+    // Dark background
+    ctx.fillStyle = '#1a2a1a';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(0, 0, cw, ch, 8);
+    else ctx.rect(0, 0, cw, ch);
+    ctx.fill();
+
+    const r = 18, px = cw / 2, py = ch * 0.62;
+    const {skin, hair, top: topC, bot, hat, hatColor} = cfg;
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath(); ctx.ellipse(px + 1, py + r*0.6, r*0.75, r*0.22, 0, 0, Math.PI*2); ctx.fill();
+    // Legs
+    for (const [side, sign] of [[-1,-1],[1,1]]) {
+      ctx.save(); ctx.translate(px + side*r*0.22, py + r*0.28); ctx.rotate(sign*swing);
+      ctx.fillStyle = bot; ctx.fillRect(-r*0.18, 0, r*0.36, r*0.75);
+      ctx.fillStyle = '#222'; ctx.fillRect(-r*0.2, r*0.68, r*0.4, r*0.16);
+      ctx.restore();
+    }
+    // Torso
+    ctx.fillStyle = topC; ctx.fillRect(px - r*0.48, py - r*0.28, r*0.96, r*0.6);
+    // Arms
+    for (const [side, sign] of [[-1,1],[1,-1]]) {
+      ctx.save(); ctx.translate(px + side*r*0.55, py - r*0.18); ctx.rotate(sign*swing*0.85);
+      ctx.fillStyle = topC; ctx.fillRect(-r*0.15, 0, r*0.3, r*0.58);
+      ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(0, r*0.62, r*0.14, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+    // Neck + Head
+    ctx.fillStyle = skin;
+    ctx.fillRect(px - r*0.14, py - r*0.58, r*0.28, r*0.32);
+    ctx.beginPath(); ctx.arc(px, py - r*0.82, r*0.52, 0, Math.PI*2); ctx.fill();
+    // Hair
+    ctx.fillStyle = hair;
+    ctx.beginPath(); ctx.arc(px, py - r*0.92, r*0.52, Math.PI*0.9, 0.1); ctx.fill();
+    ctx.fillRect(px - r*0.52, py - r*0.92, r*0.14, r*0.28);
+    ctx.fillRect(px + r*0.38, py - r*0.92, r*0.14, r*0.28);
+    // Eyes + smile
+    ctx.fillStyle = '#222';
+    ctx.beginPath(); ctx.arc(px - r*0.19, py - r*0.82, r*0.08, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(px + r*0.19, py - r*0.82, r*0.08, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#663a1a'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(px, py - r*0.72, r*0.18, 0.2, Math.PI - 0.2); ctx.stroke();
+    // Hat
+    if (hat === 'cap') {
+      ctx.fillStyle = hatColor || '#cc2020';
+      ctx.beginPath(); ctx.arc(px, py - r*1.18, r*0.5, Math.PI, 0); ctx.fill();
+      ctx.fillRect(px - r*0.72, py - r*1.18, r*1.44, r*0.14);
+    } else if (hat === 'beanie') {
+      ctx.fillStyle = hatColor || '#2244aa';
+      ctx.beginPath(); ctx.arc(px, py - r*1.08, r*0.52, Math.PI*1.18, -Math.PI*0.18); ctx.fill();
+      ctx.fillRect(px - r*0.52, py - r*1.08, r*1.04, r*0.16);
+    }
+  }
+
+  function startAvatarPreviewLoop() {
+    if (avatarRaf) return;
+    const canvas = document.getElementById('avatar-preview-canvas');
+    if (!canvas) return;
+    function loop() {
+      if (menu.classList.contains('hidden')) { avatarRaf = null; return; }
+      drawAvatarToCanvas(canvas, avatarCfg, Math.sin(Date.now() / 400) * 0.3);
+      avatarRaf = requestAnimationFrame(loop);
+    }
+    avatarRaf = requestAnimationFrame(loop);
+  }
+
+  function initAvatarCreator() {
+    const profile = window.currentProfile || {};
+    if (profile.avatar) avatarCfg = { ...avatarCfg, ...profile.avatar };
+
+    // Sync selected state on all swatches
+    document.querySelectorAll('.av-swatch').forEach(btn => {
+      btn.classList.toggle('selected', avatarCfg[btn.dataset.key] === btn.dataset.val);
+    });
+    document.querySelectorAll('.av-hat-btn').forEach(btn => {
+      btn.classList.toggle('selected', avatarCfg.hat === btn.dataset.hat);
+    });
+
+    // Add listeners only once
+    if (!avatarListenersAdded) {
+      avatarListenersAdded = true;
+      document.querySelectorAll('.av-swatch').forEach(btn => {
+        btn.addEventListener('click', () => {
+          avatarCfg[btn.dataset.key] = btn.dataset.val;
+          document.querySelectorAll(`.av-swatch[data-key="${btn.dataset.key}"]`).forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+        });
+      });
+      document.querySelectorAll('.av-hat-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          avatarCfg.hat = btn.dataset.hat;
+          if (btn.dataset.hatcolor) avatarCfg.hatColor = btn.dataset.hatcolor;
+          document.querySelectorAll('.av-hat-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+        });
+      });
+    }
+
+    startAvatarPreviewLoop();
   }
 
   function hydrateProfileUI() {
@@ -303,6 +416,7 @@
       const nextProfile = {
         displayName,
         avatarDataUrl,
+        avatar: { ...avatarCfg },
         reunionPartnerEmail: reunion.partnerEmail,
         reunionAt: reunion.reunionAt,
         updatedAt: Date.now()

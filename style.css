@@ -4175,3 +4175,16 @@ body.library-mode ::-webkit-scrollbar-thumb { background: rgba(160, 100, 40, 0.4
   color: #fff;
 }
 #btn-back-to-map.hidden { display: none; }
+
+/* Avatar swatch buttons */
+.av-swatch {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+  padding: 0;
+}
+.av-swatch:hover { transform: scale(1.15); }
+.av-swatch.selected { border-color: #fff; }
+.av-hat-btn.selected { border-color: #88aaff !important; color: #fff !important; background: #2a3a5a !important; }
