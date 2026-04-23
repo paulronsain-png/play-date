@@ -17,10 +17,11 @@
   // ── State ─────────────────────────────────────────────────────────────────────
   let canvas, ctx, raf;
   let sid, role, myProf, oppProf, mode;
-  let mySide; // 'left' | 'right'
+  let mySide, oppSide; // 'left' | 'right'
   let ball, chars, score, phase, phaseTimer, lastScorer;
   let drag = null;
   let lastSync = 0;
+  let botCooldown = 0;
 
   function initState() {
     ball  = { x: FW / 2, y: FH / 2, vx: 0, vy: 0 };
@@ -42,6 +43,37 @@
     drag        = null;
     phase       = 'countdown';
     phaseTimer  = 90;
+    botCooldown = 100; // wait for countdown before bot shoots
+  }
+
+  // ── Bot AI (solo mode) ────────────────────────────────────────────────────────
+  function botTick() {
+    if (mode !== 'solo' || phase !== 'live' || !oppSide) return;
+    if (botCooldown > 0) { botCooldown--; return; }
+
+    const bot = chars[oppSide];
+
+    // Only fire if bot character has settled
+    const botMoving = Math.abs(bot.vx) + Math.abs(bot.vy) > 0.3;
+    if (botMoving) { botCooldown = 20; return; }
+
+    // Vector from bot to ball
+    let dx = ball.x - bot.x;
+    let dy = ball.y - bot.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 1) { botCooldown = 40; return; }
+
+    // Aim slightly toward goal-center height for better angles
+    const goalY = FH / 2;
+    dy += (goalY - ball.y) * 0.2 + (Math.random() - 0.5) * FH * 0.18;
+
+    // Normalize and apply random power (60-100% of max)
+    const len   = Math.sqrt(dx * dx + dy * dy);
+    const pwr   = MAX_DRAG * POWER * (0.6 + Math.random() * 0.4);
+    bot.vx = (dx / len) * pwr;
+    bot.vy = (dy / len) * pwr;
+
+    botCooldown = 140 + Math.floor(Math.random() * 100); // ~2.5–4 s
   }
 
   // ── Physics ───────────────────────────────────────────────────────────────────
@@ -573,6 +605,7 @@
       phaseTimer--;
       if (phaseTimer <= 0) resetAfterGoal();
     }
+    botTick();
     step();
     draw();
     raf = requestAnimationFrame(tick);
@@ -583,7 +616,9 @@
     sid    = opts.sid;    role    = opts.role;
     myProf = opts.myProf; oppProf = opts.oppProf;
     mode   = opts.mode || 'solo';
-    mySide = (mode === 'solo' || role === 'host') ? 'left' : 'right';
+    mySide   = (mode === 'solo' || role === 'host') ? 'left' : 'right';
+    oppSide  = mySide === 'left' ? 'right' : 'left';
+    botCooldown = 160;
 
     canvas = document.getElementById('park-canvas');
     if (!canvas) return;

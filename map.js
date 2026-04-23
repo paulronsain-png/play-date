@@ -748,9 +748,8 @@
   };
 
   window.returnToMap = function () {
-    if (!sid) return;
     inChessAlready = false;
-    window.db?.ref(`sessions/${sid}`).update({ inChess: false });
+    if (sid) window.db?.ref(`sessions/${sid}`).update({ inChess: false });
     window.stopBar?.();
     window.stopCasino?.();
     window.stopPark?.();

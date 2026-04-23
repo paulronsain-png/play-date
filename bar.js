@@ -20,7 +20,7 @@
 
   // ── State ─────────────────────────────────────────────────────────────────────
   let canvas, ctx;
-  let sid, myRole, oppRole;
+  let sid, myRole, oppRole, mode;
   let balls = [], pockets = [];
   let TABLE = {}, PF = {};
   let myTurn     = false;
@@ -37,8 +37,9 @@
   let toast      = { msg: '', ttl: 0 };
   let gameOver   = false;
   let winner     = null;
-  let turnPocketed   = [];
+  let turnPocketed    = [];
   let scratchThisTurn = false;
+  let botShooting     = false;
 
   const clamp = (v, lo, hi) => v < lo ? lo : v > hi ? hi : v;
 
@@ -359,7 +360,7 @@
       turnText  = 'Click to place cue ball';
       turnColor = '#ffd700';
     } else {
-      turnText  = myTurn ? 'Your turn' : "Opponent's turn";
+      turnText  = myTurn ? 'Your turn' : (mode === 'solo' ? "🤖 Bot's turn…" : "Opponent's turn");
       turnColor = myTurn ? '#a8ffa8' : '#ffcca0';
     }
     ctx.fillStyle = 'rgba(0,0,0,0.72)';
@@ -470,9 +471,12 @@
   }
 
   function endTurn(keepTurn, opponentPlaces) {
-    pushState(keepTurn ? myRole : oppRole, opponentPlaces);
+    if (mode !== 'solo') pushState(keepTurn ? myRole : oppRole, opponentPlaces);
     myTurn = keepTurn;
     phase  = keepTurn ? 'aiming' : 'waiting';
+    if (!keepTurn && mode === 'solo' && !gameOver) {
+      setTimeout(botTurn, 1200 + Math.random() * 600);
+    }
   }
 
   function endGame(winRole) {
@@ -494,6 +498,109 @@
       Object.assign(cb, { x: cx, y: cy, vx: 0, vy: 0, pocketed: false });
     }
     phase = 'aiming';
+  }
+
+  // ── Bot AI (solo mode) ────────────────────────────────────────────────────────
+  function isBotBall(id) {
+    if (!oppGroup || id === 0 || id === 8) return false;
+    return oppGroup === 'solid' ? id <= 7 : id >= 9;
+  }
+
+  function computeBotShot() {
+    const cb = cueBall();
+    if (!cb) return null;
+
+    const botBallsLeft = balls.filter(b => !b.pocketed && isBotBall(b.id)).length;
+    const allBotDone   = oppGroup !== null && botBallsLeft === 0;
+
+    let bestAngle = Math.random() * Math.PI * 2;
+    let bestScore = -Infinity;
+    let bestPower = 8;
+
+    for (const b of balls) {
+      if (b.pocketed || b.id === 0) continue;
+      if (b.id === 8 && !allBotDone) continue;          // can't go for 8 yet
+      if (oppGroup && !isBotBall(b.id) && b.id !== 8) continue; // wrong group
+
+      for (const p of pockets) {
+        const toPdx = p.x - b.x, toPdy = p.y - b.y;
+        const toPd  = Math.sqrt(toPdx * toPdx + toPdy * toPdy);
+        if (toPd < 1) continue;
+
+        // Ghost ball: where cue needs to be to send b toward p
+        const gx = b.x - (toPdx / toPd) * BALL_R * 2;
+        const gy = b.y - (toPdy / toPd) * BALL_R * 2;
+
+        const toGdx = gx - cb.x, toGdy = gy - cb.y;
+        const toGd  = Math.sqrt(toGdx * toGdx + toGdy * toGdy);
+
+        const score = 4000 / (toPd + 1) - toGd * 0.25;
+        if (score > bestScore) {
+          bestScore = score;
+          bestAngle = Math.atan2(toGdy, toGdx);
+          bestPower = clamp(6 + toGd / 50, 5, MAX_POWER * 0.82);
+        }
+      }
+    }
+
+    // Add a little imprecision so the bot isn't perfect
+    bestAngle += (Math.random() - 0.5) * 0.22;
+    return { angle: bestAngle, power: bestPower };
+  }
+
+  function botTurn() {
+    if (mode !== 'solo' || gameOver) return;
+    const cb = cueBall();
+    if (!cb) return;
+
+    const shot = computeBotShot();
+    if (!shot) return;
+
+    cb.vx = Math.cos(shot.angle) * shot.power;
+    cb.vy = Math.sin(shot.angle) * shot.power;
+    phase        = 'shooting';
+    botShooting  = true;
+    turnPocketed = [];
+    scratchThisTurn = false;
+  }
+
+  function handleBotTurnEnd() {
+    const nonSpecial = turnPocketed.filter(id => id !== 0 && id !== 8);
+
+    // Assign groups from bot's first pocket
+    if (!oppGroup && nonSpecial.length > 0) {
+      oppGroup = nonSpecial[0] <= 7 ? 'solid' : 'stripe';
+      myGroup  = oppGroup === 'solid' ? 'stripe' : 'solid';
+      showToast(`Bot got ${oppGroup}s — you have ${myGroup}s`);
+    }
+
+    // 8-ball pocketed by bot
+    if (turnPocketed.includes(8)) {
+      const botLeft = balls.filter(b => !b.pocketed && isBotBall(b.id)).length;
+      endGame(botLeft === 0 && !scratchThisTurn ? oppRole : myRole);
+      return;
+    }
+
+    // Bot scratched — human places cue ball
+    if (scratchThisTurn) {
+      showToast('Bot scratched — place your cue ball');
+      myTurn = true;
+      phase  = 'placing';
+      return;
+    }
+
+    // Bot pocketed its own ball(s) → bot goes again
+    const botSunk = nonSpecial.filter(id => isBotBall(id));
+    if (botSunk.length > 0 && oppGroup) {
+      showToast('Bot pockets again…');
+      phase = 'waiting';
+      setTimeout(botTurn, 1100 + Math.random() * 500);
+    } else {
+      // Hand back to human
+      myTurn = true;
+      phase  = 'aiming';
+      showToast('Your turn!');
+    }
   }
 
   // ── Firebase ──────────────────────────────────────────────────────────────────
@@ -625,7 +732,10 @@
     if (phase === 'shooting') {
       // Multiple sub-steps per frame for stable collisions
       for (let i = 0; i < 3; i++) step();
-      if (allStopped()) handleTurnEnd();
+      if (allStopped()) {
+        if (botShooting) { botShooting = false; handleBotTurnEnd(); }
+        else handleTurnEnd();
+      }
     }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -645,6 +755,7 @@
     sid     = opts.sid;
     myRole  = opts.role;
     oppRole = myRole === 'host' ? 'guest' : 'host';
+    mode    = opts.mode || 'multi';
 
     canvas = document.getElementById('bar-canvas');
     if (!canvas) { console.warn('bar-canvas not found'); return; }
@@ -661,11 +772,12 @@
     oppGroup    = null;
     gameOver    = false;
     winner      = null;
+    botShooting = false;
     phase       = myTurn ? 'aiming' : 'waiting';
     lastSyncTs  = 0;
     toast       = { msg: '', ttl: 0 };
 
-    listenPool();
+    if (mode !== 'solo') listenPool();
     lastTs = performance.now();
     raf = requestAnimationFrame(tick);
   };
