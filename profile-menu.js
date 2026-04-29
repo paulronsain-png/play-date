@@ -90,8 +90,8 @@
   function openMenu() {
     menu.classList.remove('hidden');
     btn.setAttribute('aria-expanded', 'true');
-    hydrateProfileUI();
-    initAvatarCreator();
+    initAvatarCreator();   // syncs avatarCfg from profile first
+    hydrateProfileUI();    // then draws with correct cfg
     loadHistory();
   }
 
@@ -191,7 +191,7 @@
     else ctx.rect(0, 0, cw, ch);
     ctx.fill();
 
-    const r = 18, px = cw / 2, py = ch * 0.62;
+    const r = Math.min(cw, ch) * 0.22, px = cw / 2, py = ch * 0.76;
     const {skin, hair, top: topC, bot, hat, hatColor} = cfg;
 
     // Shadow
@@ -295,8 +295,9 @@
     const name = String(profile.displayName || user?.email?.split('@')[0] || 'Player').trim() || 'Player';
     const cfg = profile.avatar ? { ...avatarCfg, ...profile.avatar } : avatarCfg;
 
-    // Draw avatar into navbar button canvas
+    // Draw avatar into navbar button and menu header canvases
     if (btnAvatar) drawAvatarToCanvas(btnAvatar, cfg, 0.15);
+    if (menuAvatar) drawAvatarToCanvas(menuAvatar, cfg, 0.15);
 
     if (menuName) menuName.textContent = name;
     if (menuEmail) menuEmail.textContent = user?.email || '';
