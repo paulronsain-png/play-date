@@ -826,11 +826,11 @@
       </div>
       <div class="profile-menu-wrap hidden" id="profile-menu-wrap">
         <button id="profile-btn" class="nav-btn profile-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Profile menu">
-          <img id="profile-btn-avatar" class="profile-btn-avatar" alt="Profile avatar" />
+          <canvas id="profile-btn-avatar" class="profile-btn-avatar" width="44" height="44"></canvas>
         </button>
         <div id="profile-menu" class="profile-menu hidden" role="menu" aria-label="Profile menu">
           <div class="profile-menu-header">
-            <img id="profile-menu-avatar" class="profile-menu-avatar" alt="Profile avatar" />
+            <canvas id="profile-menu-avatar" class="profile-menu-avatar" width="60" height="60"></canvas>
             <div class="profile-menu-meta">
               <div id="profile-menu-name" class="profile-menu-name">Player</div>
               <div class="profile-menu-email-row">
@@ -842,12 +842,7 @@
           <div class="profile-edit">
             <label class="profile-edit-label" for="profile-menu-name-input">Player Name</label>
             <input id="profile-menu-name-input" class="profile-edit-input" type="text" maxlength="24" placeholder="Your name" />
-          <label class="profile-edit-label" for="profile-menu-avatar-input">Avatar Photo</label>
-          <div class="profile-edit-avatar-row">
-            <img id="profile-menu-avatar-preview" class="profile-edit-avatar-preview" alt="Avatar preview" />
-            <input id="profile-menu-avatar-input" class="auth-file-input" type="file" accept="image/*" />
-          </div>
-          <label class="profile-edit-label">Map Character</label>
+          <label class="profile-edit-label">Character</label>
           <div style="background:#0e1420;border-radius:12px;padding:12px;margin-bottom:10px;">
             <canvas id="avatar-preview-canvas" width="80" height="100" style="display:block;margin:0 auto 10px;background:#1a2a1a;border-radius:8px;"></canvas>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;color:#aaa;">
@@ -924,14 +919,6 @@
   <!-- ── Map View ─────────────────────────────────────────────────────────── -->
   <div id="map-view" class="hidden">
     <canvas id="map-canvas"></canvas>
-
-    <!-- Header bar -->
-    <div class="map-header">
-      <span class="map-title">🗺 Game Land</span>
-      <div class="map-header-right">
-        <button id="map-exit-btn" class="map-exit-btn" type="button">✕ Exit</button>
-      </div>
-    </div>
 
     <!-- Mobile D-pad -->
     <div class="map-mobile-controls">

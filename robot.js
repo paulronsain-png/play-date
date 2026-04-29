@@ -36,6 +36,7 @@
   };
 
   function playRobotEvent(data) {
+    if (document.getElementById('game-main')?.classList.contains('hidden')) return;
     const btn = document.getElementById('btn-ask-robot');
     if (!btn) return;
     const lbl = btn.querySelector('.robot-btn-label');

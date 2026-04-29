@@ -602,14 +602,14 @@
   const OPP_AVATAR     = { skin:'#f5c99a', hair:'#8a3020', top:'#6a2020', bot:'#2a1a10', hat:'none' };
 
   function drawAvatar(pos, cfg, walkPhase, name, isMe) {
-    const r = PRAD;
+    const r = PRAD * 1.6;
     cfg = cfg || (isMe ? DEFAULT_AVATAR : OPP_AVATAR);
     const {skin, hair, top: topColor, bot: botColor, hat, hatColor} = cfg;
     const swing = Math.sin(walkPhase) * 0.42;
 
     // Shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.22)';
-    ctx.beginPath(); ctx.ellipse(pos.x + 2, pos.y + r*0.6, r*0.75, r*0.22, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    ctx.beginPath(); ctx.ellipse(pos.x + 2, pos.y + r*0.6, r*0.78, r*0.22, 0, 0, Math.PI*2); ctx.fill();
 
     // Legs
     for (const [side, sign] of [[-1, -1],[1, 1]]) {
@@ -617,18 +617,19 @@
       ctx.translate(pos.x + side * r * 0.22, pos.y + r * 0.28);
       ctx.rotate(sign * swing);
       ctx.fillStyle = botColor;
-      ctx.fillRect(-r*0.18, 0, r*0.36, r*0.75);
-      // Shoe
-      ctx.fillStyle = '#2a2a2a';
-      ctx.fillRect(-r*0.2, r*0.68, r*0.4, r*0.16);
+      ctx.beginPath(); rr(-r*0.18, 0, r*0.36, r*0.72, 3); ctx.fill();
+      // Shoe (rounded)
+      ctx.fillStyle = '#222';
+      ctx.beginPath(); rr(-r*0.22, r*0.64, r*0.44, r*0.18, 4); ctx.fill();
       ctx.restore();
     }
 
     // Torso
     ctx.fillStyle = topColor;
-    ctx.beginPath();
-    rr(pos.x - r*0.48, pos.y - r*0.28, r*0.96, r*0.6, 3);
-    ctx.fill();
+    ctx.beginPath(); rr(pos.x - r*0.48, pos.y - r*0.28, r*0.96, r*0.58, 5); ctx.fill();
+    // Collar V
+    ctx.strokeStyle = skin; ctx.lineWidth = r*0.1;
+    ctx.beginPath(); ctx.moveTo(pos.x - r*0.12, pos.y - r*0.28); ctx.lineTo(pos.x, pos.y - r*0.08); ctx.lineTo(pos.x + r*0.12, pos.y - r*0.28); ctx.stroke();
 
     // Arms
     for (const [side, sign] of [[-1, 1],[1, -1]]) {
@@ -636,65 +637,92 @@
       ctx.translate(pos.x + side * r * 0.55, pos.y - r * 0.18);
       ctx.rotate(sign * swing * 0.85);
       ctx.fillStyle = topColor;
-      ctx.fillRect(-r*0.15, 0, r*0.3, r*0.58);
+      ctx.beginPath(); rr(-r*0.15, 0, r*0.3, r*0.56, 4); ctx.fill();
       // Hand
       ctx.fillStyle = skin;
-      ctx.beginPath(); ctx.arc(0, r*0.62, r*0.14, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(0, r*0.62, r*0.155, 0, Math.PI*2); ctx.fill();
       ctx.restore();
     }
 
     // Neck
     ctx.fillStyle = skin;
-    ctx.fillRect(pos.x - r*0.14, pos.y - r*0.58, r*0.28, r*0.32);
+    ctx.beginPath(); rr(pos.x - r*0.13, pos.y - r*0.58, r*0.26, r*0.32, 3); ctx.fill();
 
     // Head
     ctx.fillStyle = skin;
-    ctx.beginPath(); ctx.arc(pos.x, pos.y - r*0.82, r*0.52, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(pos.x, pos.y - r*0.82, r*0.54, 0, Math.PI*2); ctx.fill();
+    // Ear nubs
+    ctx.fillStyle = skin;
+    ctx.beginPath(); ctx.ellipse(pos.x - r*0.54, pos.y - r*0.82, r*0.1, r*0.16, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(pos.x + r*0.54, pos.y - r*0.82, r*0.1, r*0.16, 0, 0, Math.PI*2); ctx.fill();
 
     // Hair
     ctx.fillStyle = hair;
-    ctx.beginPath(); ctx.arc(pos.x, pos.y - r*0.92, r*0.52, Math.PI*0.9, 0.1); ctx.fill();
-    ctx.fillRect(pos.x - r*0.52, pos.y - r*0.92, r*0.14, r*0.28);
-    ctx.fillRect(pos.x + r*0.38, pos.y - r*0.92, r*0.14, r*0.28);
+    ctx.beginPath(); ctx.arc(pos.x, pos.y - r*0.94, r*0.54, Math.PI*0.88, 0.12); ctx.fill();
+    ctx.fillRect(pos.x - r*0.54, pos.y - r*0.94, r*0.15, r*0.28);
+    ctx.fillRect(pos.x + r*0.39, pos.y - r*0.94, r*0.15, r*0.28);
+
+    // Eyebrows
+    ctx.strokeStyle = hair; ctx.lineWidth = r*0.09; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(pos.x - r*0.3, pos.y - r*0.95); ctx.lineTo(pos.x - r*0.08, pos.y - r*0.98); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pos.x + r*0.3, pos.y - r*0.95); ctx.lineTo(pos.x + r*0.08, pos.y - r*0.98); ctx.stroke();
+    ctx.lineCap = 'butt';
 
     // Eyes
-    ctx.fillStyle = '#222';
-    ctx.beginPath(); ctx.arc(pos.x - r*0.19, pos.y - r*0.82, r*0.08, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(pos.x + r*0.19, pos.y - r*0.82, r*0.08, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#1a1a2e';
+    ctx.beginPath(); ctx.arc(pos.x - r*0.2, pos.y - r*0.82, r*0.1, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(pos.x + r*0.2, pos.y - r*0.82, r*0.1, 0, Math.PI*2); ctx.fill();
+    // Iris
+    ctx.fillStyle = '#3a6fd8';
+    ctx.beginPath(); ctx.arc(pos.x - r*0.2, pos.y - r*0.82, r*0.065, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(pos.x + r*0.2, pos.y - r*0.82, r*0.065, 0, Math.PI*2); ctx.fill();
     // Eye shine
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(pos.x - r*0.16, pos.y - r*0.85, r*0.03, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(pos.x + r*0.22, pos.y - r*0.85, r*0.03, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.beginPath(); ctx.arc(pos.x - r*0.17, pos.y - r*0.86, r*0.03, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(pos.x + r*0.23, pos.y - r*0.86, r*0.03, 0, Math.PI*2); ctx.fill();
+    // Nose
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath(); ctx.ellipse(pos.x, pos.y - r*0.74, r*0.06, r*0.04, 0, 0, Math.PI*2); ctx.fill();
     // Smile
-    ctx.strokeStyle = '#663a1a'; ctx.lineWidth = 1.2;
-    ctx.beginPath(); ctx.arc(pos.x, pos.y - r*0.72, r*0.18, 0.2, Math.PI - 0.2); ctx.stroke();
+    ctx.strokeStyle = '#5a2d0a'; ctx.lineWidth = r*0.08; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(pos.x, pos.y - r*0.68, r*0.2, 0.25, Math.PI - 0.25); ctx.stroke();
+    ctx.lineCap = 'butt';
 
     // Hat
     if (hat === 'cap') {
       ctx.fillStyle = hatColor || '#cc2020';
-      ctx.beginPath(); ctx.arc(pos.x, pos.y - r*1.18, r*0.5, Math.PI, 0); ctx.fill();
-      ctx.fillRect(pos.x - r*0.72, pos.y - r*1.18, r*1.44, r*0.14); // brim
+      ctx.beginPath(); ctx.arc(pos.x, pos.y - r*1.2, r*0.52, Math.PI, 0); ctx.fill();
+      ctx.beginPath(); rr(pos.x - r*0.76, pos.y - r*1.2, r*1.52, r*0.14, 3); ctx.fill();
     } else if (hat === 'beanie') {
       ctx.fillStyle = hatColor || '#2244aa';
-      ctx.beginPath(); ctx.arc(pos.x, pos.y - r*1.08, r*0.52, Math.PI*1.18, -Math.PI*0.18); ctx.fill();
+      ctx.beginPath(); ctx.arc(pos.x, pos.y - r*1.1, r*0.54, Math.PI*1.18, -Math.PI*0.18); ctx.fill();
       ctx.fillStyle = hatColor ? hatColor : '#4466cc';
-      ctx.fillRect(pos.x - r*0.52, pos.y - r*1.08, r*1.04, r*0.16);
+      ctx.beginPath(); rr(pos.x - r*0.54, pos.y - r*1.1, r*1.08, r*0.16, 3); ctx.fill();
     }
 
-    // Selection ring (me = blue ring)
+    // Selection ring
     if (isMe) {
-      ctx.strokeStyle = 'rgba(100,180,255,0.7)'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(pos.x, pos.y, r*1.1, 0, Math.PI*2); ctx.stroke();
+      ctx.strokeStyle = 'rgba(100,180,255,0.65)'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(pos.x, pos.y, PRAD * 1.15, 0, Math.PI*2); ctx.stroke();
     }
 
-    // Name tag
+    // Name tag — pill shaped
     ctx.save();
-    ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
+    ctx.font = '600 12px "Segoe UI", system-ui, Arial, sans-serif';
+    ctx.textAlign = 'center';
     const tw = ctx.measureText(name).width;
-    ctx.fillStyle = 'rgba(0,0,0,0.78)';
-    ctx.fillRect(pos.x - tw/2 - 6, pos.y - r*1.8, tw + 12, 18);
-    ctx.fillStyle = isMe ? '#a8d8ff' : '#ffcda0';
-    ctx.fillText(name, pos.x, pos.y - r*1.65);
+    const tagW = tw + 16, tagH = 18, tagR = 9;
+    const tx = pos.x - tagW / 2, ty = pos.y - r * 2.08;
+    ctx.fillStyle = isMe ? 'rgba(20,60,120,0.86)' : 'rgba(30,20,10,0.82)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(tx, ty, tagW, tagH, tagR);
+    else ctx.rect(tx, ty, tagW, tagH);
+    ctx.fill();
+    ctx.strokeStyle = isMe ? 'rgba(120,190,255,0.55)' : 'rgba(255,190,110,0.45)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = isMe ? '#cce8ff' : '#ffe4b8';
+    ctx.fillText(name, pos.x, ty + 13);
     ctx.restore();
   }
 
@@ -791,10 +819,18 @@
   }
 
   // ── Building bridges ──────────────────────────────────────────────────────────
+  function setGameUI(visible) {
+    const d = visible ? '' : 'none';
+    document.getElementById('camera-btn')?.style.setProperty('display', d);
+    document.getElementById('chat-btn')?.style.setProperty('display', d);
+    if (!visible) document.getElementById('chat-panel')?.classList.add('hidden');
+  }
+
   function goChess(chessGameId) {
     if (inChessAlready) return;
     inChessAlready = true;
     stopMap();
+    setGameUI(true);
     document.getElementById('map-view')?.classList.add('hidden');
     document.getElementById('game-main')?.classList.remove('hidden');
     window.bootGameFromSession?.(chessGameId);
@@ -802,6 +838,7 @@
 
   function goPark(mode) {
     stopMap();
+    setGameUI(true);
     document.getElementById('map-view')?.classList.add('hidden');
     document.getElementById('park-view')?.classList.remove('hidden');
     const tryInit = () => {
@@ -813,6 +850,7 @@
 
   function goCasino(mode) {
     stopMap();
+    setGameUI(true);
     document.getElementById('map-view')?.classList.add('hidden');
     document.getElementById('casino-view')?.classList.remove('hidden');
     const tryInit = () => {
@@ -824,6 +862,7 @@
 
   function goConnect4(mode) {
     stopMap();
+    setGameUI(true);
     document.getElementById('map-view')?.classList.add('hidden');
     document.getElementById('connect4-view')?.classList.remove('hidden');
     const tryInit = () => {
@@ -835,6 +874,7 @@
 
   function goBar(mode) {
     stopMap();
+    setGameUI(true);
     document.getElementById('map-view')?.classList.add('hidden');
     document.getElementById('bar-view')?.classList.remove('hidden');
     const tryInit = () => {
@@ -1166,6 +1206,7 @@
   }
 
   window.initMap = function (opts) {
+    setGameUI(false);
     sid = opts.sid; role = opts.role;
     myProf = opts.myProf; oppProf = opts.oppProf || null;
     myAvatarCfg  = opts.myProf?.avatar  || null;

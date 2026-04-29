@@ -11,10 +11,8 @@
   const menuName = byId('profile-menu-name');
   const menuEmail = byId('profile-menu-email');
   const nameInput = byId('profile-menu-name-input');
-  const avatarInput = byId('profile-menu-avatar-input');
   const partnerEmailInput = byId('profile-menu-partner-email');
   const reunionAtInput = byId('profile-menu-reunion-at');
-  const avatarPreview = byId('profile-menu-avatar-preview');
   const saveProfileBtn = byId('profile-save-btn-menu');
   const historyList = byId('profile-history-list');
   const statusEl = byId('profile-menu-status');
@@ -72,30 +70,15 @@
     return { ok: true, partnerEmail: p, reunionAt: r };
   }
 
-  async function fileToAvatarDataUrl(file) {
-    if (!file) return null;
-    const raw = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-    const img = await new Promise((resolve, reject) => {
-      const i = new Image();
-      i.onload = () => resolve(i);
-      i.onerror = reject;
-      i.src = raw;
-    });
-    const maxSide = 320;
-    const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
-    const w = Math.max(1, Math.round(img.width * scale));
-    const h = Math.max(1, Math.round(img.height * scale));
-    const canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, w, h);
-    return canvas.toDataURL('image/jpeg', 0.84);
+  function generateAvatarDataUrl(cfg) {
+    const c = document.createElement('canvas');
+    c.width = 80; c.height = 100;
+    drawAvatarToCanvas(c, cfg, 0.15);
+    return c.toDataURL('image/png');
+  }
+
+  function drawAvatarToSmallCanvas(canvas, cfg) {
+    drawAvatarToCanvas(canvas, cfg, Math.sin(Date.now() / 400) * 0.3);
   }
 
   function closeMenu() {
@@ -263,7 +246,9 @@
     if (!canvas) return;
     function loop() {
       if (menu.classList.contains('hidden')) { avatarRaf = null; return; }
-      drawAvatarToCanvas(canvas, avatarCfg, Math.sin(Date.now() / 400) * 0.3);
+      const swing = Math.sin(Date.now() / 400) * 0.3;
+      drawAvatarToCanvas(canvas, avatarCfg, swing);
+      if (menuAvatar) drawAvatarToCanvas(menuAvatar, avatarCfg, swing);
       avatarRaf = requestAnimationFrame(loop);
     }
     avatarRaf = requestAnimationFrame(loop);
@@ -308,24 +293,16 @@
     const user = window.currentUser || null;
     const profile = window.currentProfile || {};
     const name = String(profile.displayName || user?.email?.split('@')[0] || 'Player').trim() || 'Player';
-    const avatar = profile.avatarDataUrl || defaultAvatar(name);
-    if (btnAvatar) {
-      btnAvatar.src = avatar;
-      btnAvatar.alt = name;
-    }
-    if (menuAvatar) {
-      menuAvatar.src = avatar;
-      menuAvatar.alt = name;
-    }
+    const cfg = profile.avatar ? { ...avatarCfg, ...profile.avatar } : avatarCfg;
+
+    // Draw avatar into navbar button canvas
+    if (btnAvatar) drawAvatarToCanvas(btnAvatar, cfg, 0.15);
+
     if (menuName) menuName.textContent = name;
     if (menuEmail) menuEmail.textContent = user?.email || '';
     if (nameInput) nameInput.value = name;
     if (partnerEmailInput) partnerEmailInput.value = normalizeEmail(profile.reunionPartnerEmail || '');
     if (reunionAtInput) reunionAtInput.value = toDateTimeLocalValue(profile.reunionAt || null);
-    if (avatarPreview) {
-      avatarPreview.src = avatar;
-      avatarPreview.alt = name;
-    }
     if (invitePartnerBtn) {
       const hasPartnerEmail = !!normalizeEmail(partnerEmailInput?.value || profile.reunionPartnerEmail || '');
       invitePartnerBtn.disabled = !hasPartnerEmail;
@@ -368,22 +345,6 @@
     }
   });
 
-  avatarInput?.addEventListener('change', async () => {
-    const file = avatarInput.files && avatarInput.files[0];
-    if (!file) {
-      const profile = window.currentProfile || {};
-      const name = String(nameInput?.value || profile.displayName || 'Player').trim() || 'Player';
-      if (avatarPreview) avatarPreview.src = profile.avatarDataUrl || defaultAvatar(name);
-      return;
-    }
-    try {
-      const dataUrl = await fileToAvatarDataUrl(file);
-      if (avatarPreview && dataUrl) avatarPreview.src = dataUrl;
-    } catch (_) {
-      setStatus('Could not load this image file.');
-    }
-  });
-
   partnerEmailInput?.addEventListener('input', () => {
     if (invitePartnerBtn) invitePartnerBtn.disabled = !getPartnerEmailForInvite();
   });
@@ -409,10 +370,7 @@
     try {
       saveProfileBtn.disabled = true;
       setStatus('Saving profile...');
-      const current = window.currentProfile || {};
-      const file = avatarInput?.files && avatarInput.files[0];
-      const uploadedAvatar = file ? await fileToAvatarDataUrl(file) : null;
-      const avatarDataUrl = uploadedAvatar || avatarPreview?.src || current.avatarDataUrl || defaultAvatar(displayName);
+      const avatarDataUrl = generateAvatarDataUrl(avatarCfg);
       const nextProfile = {
         displayName,
         avatarDataUrl,
@@ -439,7 +397,6 @@
         });
       }
 
-      if (avatarInput) avatarInput.value = '';
       setStatus('Profile updated.', true);
       if (invitePartnerBtn) invitePartnerBtn.disabled = !normalizeEmail(nextProfile.reunionPartnerEmail);
       hydrateProfileUI();

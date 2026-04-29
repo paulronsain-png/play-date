@@ -2989,6 +2989,8 @@ body.auth-locked #bar-view {
   border-radius: 999px;
   object-fit: cover;
   border: 1px solid rgba(210, 236, 255, 0.4);
+  overflow: hidden;
+  display: block;
 }
 
 .profile-menu {
@@ -3015,11 +3017,14 @@ body.auth-locked #bar-view {
 }
 
 .profile-menu-avatar {
-  width: 46px;
-  height: 46px;
+  width: 60px;
+  height: 60px;
   border-radius: 999px;
   object-fit: cover;
   border: 1px solid rgba(205, 232, 255, 0.5);
+  overflow: hidden;
+  display: block;
+  flex-shrink: 0;
 }
 
 .profile-menu-name {
